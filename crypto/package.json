@@ -1,0 +1,24 @@
+{
+  "name": "crypto",
+  "version": "1.0.0",
+  "main": "crypto.js",
+  "type": "module",
+  "engines": {
+    "node": "v22.15.0"
+  },
+  "scripts": {
+    "start": "node --env-file=.env index.js",
+    "test-watch": "NODE_OPTIONS=--experimental-vm-modules npx jest --runInBand --watch --config ./jest.config.js",
+    "test:cov": "NODE_OPTIONS=--experimental-vm-modules npx jest --config ./jest.config.js --coverage"
+  },
+  "keywords": [],
+  "author": "Yves Guilherme Lopo R. Lima",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "aes-js": "^3.1.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
