@@ -1,4 +1,5 @@
 import Block from './model/block.model.ts';
+import Validation from './validation.ts';
 
 class Blockchain {
   readonly #chain: Block[];
@@ -24,7 +25,9 @@ class Blockchain {
   addBlock(block: Block): boolean {
     const lastBlock = this.getLastBlock();
 
-    if (!block.isValid(lastBlock.index, lastBlock.hash)) {
+    const blockValidation: Validation = block.isValid(lastBlock.index, lastBlock.hash);
+
+    if (!blockValidation.success) {
       return false;
     }
 

@@ -6,7 +6,7 @@
     "build": "npx tsc",
     "dev": "NODE_NO_WARNINGS=1 npx nodemon --watch src --exec node --import ./loader.js src/lib/blockchain.ts -e ts",
     "start": "node dist/blockchain.js",
-    "test": "jest"
+    "test": "jest --no-cache"
   },
   "engines": {
     "node": "v22.15.0"
