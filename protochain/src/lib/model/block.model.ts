@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
 
-import Validation from '../validation';
+import Validation from '../validation.ts';
 
 class Block {
   readonly index: number;

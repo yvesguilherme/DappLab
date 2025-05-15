@@ -107,6 +107,10 @@
     "tests",
     "test",
     "jest.config.ts",
+    "node_modules"
+  ],
+  "include": [
+    "src/**/*"
   ],
   "ts-node": {
     "transpileOnly": true

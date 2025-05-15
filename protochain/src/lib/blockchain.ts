@@ -18,8 +18,12 @@ class Blockchain {
     return this.#chain[this.#chain.length - 1];
   }
 
-  getBlock(index: number): Block | null {
-    return this.#chain[index] || null;
+  getBlock(hashOrIndex: number | string): Block | null {
+    if (typeof hashOrIndex === 'number') {
+      return this.#chain[hashOrIndex] || null;
+    }
+
+    return this.#chain.find((b) => b.hash === hashOrIndex) || null;
   }
 
   addBlock(block: Block): boolean {

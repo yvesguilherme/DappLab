@@ -52,6 +52,7 @@ describe('Blockchain tests', () => {
 
   it('should return null for a non-existent block', () => {
     expect(blockchain.getBlock(1)).toBeNull();
+    expect(blockchain.getBlock('abc')).toBeNull();
   });
 
   it('should return the correct block for a valid index', () => {
@@ -59,6 +60,13 @@ describe('Blockchain tests', () => {
     blockchain.addBlock(block);
 
     expect(blockchain.getBlock(1)).toEqual(block);
+  });
+
+  it('should return the correct block for a valid hash', () => {
+    const block = new Block(1, lastHashBlock, 'data1');
+    blockchain.addBlock(block);
+
+    expect(blockchain.getBlock(block.hash)).toEqual(block);
   });
 
   it('should return false if a block has an invalid previous hash', () => {
