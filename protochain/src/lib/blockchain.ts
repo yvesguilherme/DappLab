@@ -26,19 +26,17 @@ class Blockchain {
     return this.#chain.find((b) => b.hash === hashOrIndex) || null;
   }
 
-  addBlock(block: Block): boolean {
+  addBlock(block: Block): Validation {
     const lastBlock = this.getLastBlock();
 
     const blockValidation: Validation = block.isValid(lastBlock.index, lastBlock.hash);
 
-    if (!blockValidation.success) {
-      return false;
+    if (blockValidation.success) {
+      this.#chain.push(block);
+      this.#nextIndex++;
     }
 
-    this.#chain.push(block);
-    this.#nextIndex++;
-
-    return true;
+    return blockValidation;
   }
 
   isValid(): boolean {

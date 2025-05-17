@@ -33,7 +33,7 @@ describe('Blockchain tests', () => {
   it('should add a new valid block to the blockchain', () => {
     const block = new Block(1, lastHashBlock, 'data1');
 
-    expect(blockchain.addBlock(block)).toEqual(true);
+    expect(blockchain.addBlock(block)).toEqual({success: true, message: ''});
     expect(blockchain.getChain()).toHaveLength(2);
     expect(blockchain.getBlock(1)).toEqual(block);
     expect(blockchain.getBlock(1)?.index).toEqual(1);
@@ -46,7 +46,7 @@ describe('Blockchain tests', () => {
   it('should not add an invalid block to the blockchain', () => {
     const block = new Block(12, 'invalid', 'data12');
 
-    expect(blockchain.addBlock(block)).toEqual(false);
+    expect(blockchain.addBlock(block)).toEqual({ success: false, message: 'Block index is invalid.' });
     expect(blockchain.getChain()).toHaveLength(1);
   });
 

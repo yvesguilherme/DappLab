@@ -19,8 +19,8 @@ class Block {
   constructor(index: number, previousHash: string, data: string, timestamp = Date.now()) {
     this.index = index;
     this.timestamp = timestamp;
-    this.previousHash = previousHash;
-    this.data = data;
+    this.previousHash = previousHash ?? '';
+    this.data = data ?? '';
     this.hash = this.#getHash();
 
     Object.freeze(this);

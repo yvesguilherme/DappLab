@@ -12,8 +12,9 @@ app.use(express.json());
 app.use(HttpLog.logRequest);
 
 const blockchain = new Blockchain();
+const apiRouter = express.Router();
 
-app.get('/status', (req: express.Request, res: express.Response) => {
+apiRouter.get('/status', (req: express.Request, res: express.Response) => {
   const status = {
     numberOfBlocks: blockchain.getChain().length,
     isValid: blockchain.isValid(),
@@ -23,7 +24,7 @@ app.get('/status', (req: express.Request, res: express.Response) => {
   res.json(status);
 });
 
-app.get('/blocks/:indexOrHash', (req: express.Request, res: express.Response): any => {
+apiRouter.get('/block/:indexOrHash', (req: express.Request, res: express.Response): any => {
   const { indexOrHash } = req.params;
   const block: Block | null = /^\d+$/.test(indexOrHash)
     ? blockchain.getBlock(parseInt(indexOrHash, 10))
@@ -38,5 +39,27 @@ app.get('/blocks/:indexOrHash', (req: express.Request, res: express.Response): a
     .json({ error: 'Block not found' });
 });
 
+apiRouter.post('/block', (req: express.Request, res: express.Response): any => {
+  const data: Block = req.body;
+
+  if (!data.previousHash) {
+    return res
+      .status(422)
+      .json({ error: 'Unprocessable Content' });
+  }
+
+  const block = new Block(data.index, data.previousHash, data.data);
+  const blockchainIsValid = blockchain.addBlock(block);
+
+  if (!blockchainIsValid.success) {
+    return res
+      .status(500)
+      .json(blockchainIsValid);
+  }
+
+  return res.status(201).json(block);
+});
+
+app.use('/api', apiRouter);
 
 app.listen(port, () => log.info(`Blockchain server is running on http://localhost:${port}`));
