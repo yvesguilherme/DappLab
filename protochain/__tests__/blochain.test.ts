@@ -6,6 +6,8 @@ import Block from '../src/lib/model/block.model';
 let blockchain: Blockchain;
 let lastHashBlock: string;
 
+jest.mock('../src/lib/model/block.model');
+
 beforeEach(() => {
   blockchain = new Blockchain();
   lastHashBlock = blockchain.getLastBlock().hash;
@@ -20,7 +22,7 @@ describe('Blockchain tests', () => {
     expect(blockchain.getBlock(0)?.index).toBe(0);
     expect(blockchain.getBlock(0)?.data).toBe('Genesis Block');
     expect(blockchain.getBlock(0)?.previousHash).toBe('');
-    expect(blockchain.getBlock(0)?.hash).toHaveLength(64);
+    expect(blockchain.getBlock(0)?.hash).toHaveLength(16);
     expect(blockchain.getBlock(0)?.timestamp).toBeDefined();
   });
 
@@ -39,14 +41,14 @@ describe('Blockchain tests', () => {
     expect(blockchain.getBlock(1)?.index).toEqual(1);
     expect(blockchain.getBlock(1)?.data).toEqual('data1');
     expect(blockchain.getBlock(1)?.previousHash).toEqual(lastHashBlock);
-    expect(blockchain.getBlock(1)?.hash).toHaveLength(64);
+    expect(blockchain.getBlock(1)?.hash).toHaveLength(16);
     expect(blockchain.getBlock(1)?.timestamp).toBeDefined();
   });
 
   it('should not add an invalid block to the blockchain', () => {
-    const block = new Block(12, 'invalid', 'data12');
+    const block = new Block(-1, '', 'data12');
 
-    expect(blockchain.addBlock(block)).toEqual({ success: false, message: 'Block index is invalid.' });
+    expect(blockchain.addBlock(block)).toEqual({ success: false, message: 'Invalid mock block.' });
     expect(blockchain.getChain()).toHaveLength(1);
   });
 
@@ -63,10 +65,7 @@ describe('Blockchain tests', () => {
   });
 
   it('should return the correct block for a valid hash', () => {
-    const block = new Block(1, lastHashBlock, 'data1');
-    blockchain.addBlock(block);
-
-    expect(blockchain.getBlock(block.hash)).toEqual(block);
+    expect(blockchain.getBlock('abcdef1234567890')).toEqual(blockchain.getChain()[0]);
   });
 
   it('should return false if a block has an invalid previous hash', () => {
