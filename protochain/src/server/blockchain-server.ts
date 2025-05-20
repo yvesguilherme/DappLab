@@ -9,7 +9,10 @@ const app = express();
 const port = process.env.PORT ?? 3000;
 
 app.use(express.json());
-app.use(HttpLog.logRequest);
+
+if (process.argv.includes('--run') || process.argv.includes('--r')) {
+  app.use(HttpLog.logRequest);
+}
 
 const blockchain = new Blockchain();
 const apiRouter = express.Router();
@@ -40,9 +43,9 @@ apiRouter.get('/block/:indexOrHash', (req: express.Request, res: express.Respons
 });
 
 apiRouter.post('/block', (req: express.Request, res: express.Response): any => {
-  const data: Block = req.body;
+  const data = req.body;
 
-  if (!data.previousHash) {
+  if (!data.previousHash || !data.index || !data.data) {
     return res
       .status(422)
       .json({ error: 'Unprocessable Content' });
@@ -62,4 +65,8 @@ apiRouter.post('/block', (req: express.Request, res: express.Response): any => {
 
 app.use('/api', apiRouter);
 
-app.listen(port, () => log.info(`Blockchain server is running on http://localhost:${port}`));
+if (process.argv.includes('--run') || process.argv.includes('--r')) {
+  app.listen(port, () => log.info(`Blockchain server is running on http://localhost:${port}`));
+}
+
+export { app };
