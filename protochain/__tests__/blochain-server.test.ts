@@ -2,7 +2,6 @@ import request from 'supertest';
 import { jest, describe, expect, test, beforeEach, afterEach } from '@jest/globals';
 
 import { app } from '../src/server/blockchain-server.ts';
-import HttpLog from '../src/util/http-log.ts';
 
 jest.mock('../src/lib/model/block.model.ts');
 jest.mock('../src/lib/blockchain.ts');

@@ -8,75 +8,165 @@ describe('Block tests', () => {
   let block: Block;
 
   beforeEach(() => {
-    genesisBlock = new Block(0, '', 'Genesis Block');
+    genesisBlock = new Block({
+      index: 0,
+      previousHash: '',
+      data: 'Genesis Block',
+      nonce: 1,
+      miner: 'miner'
+    } as Block);
     jest.clearAllMocks();
   });
 
   it('should be valid for the genesis block (index === 0)', () => {
+    genesisBlock.mine(4, 'miner');
     expect(genesisBlock).toBeDefined();
-    expect(genesisBlock.isValid(-1, '')).toEqual(Validation.success());
+    expect(genesisBlock.isValid(-1, '', 4)).toEqual(Validation.success());
     expect(genesisBlock.previousHash.length).toEqual(0);
     expect(genesisBlock.data.length).toBeGreaterThan(0);
   });
 
   it('should be valid', () => {
-    block = new Block(1, genesisBlock.hash, 'block 2');
+    block = new Block({
+      index: 1,
+      previousHash: genesisBlock.hash,
+      data: 'block 2'
+    } as Block);
+    block.mine(4, 'miner');
     expect(block).toBeDefined();
-    expect(block.isValid(genesisBlock.index, genesisBlock.hash)).toEqual(Validation.success());
+    expect(block.isValid(genesisBlock.index, genesisBlock.hash, 4)).toEqual(Validation.success());
   });
 
   it('should be invalid genesis block (previous hash)', () => {
-    block = new Block(0, 'invalid', 'Genesis Block');
-    expect(block.isValid(-1, '')).toEqual(Validation.failure('Genesis block must have an empty previous hash.'));
+    block = new Block({
+      index: 0,
+      previousHash: 'invalid',
+      data: 'Genesis Block'
+    } as Block);
+    expect(block.isValid(-1, '', 4)).toEqual(Validation.failure('Invalid previous hash.'));
   });
 
   it('should be invalid genesis block (data)', () => {
-    block = new Block(0, '', '');
-    expect(block.isValid(-1, '')).toEqual(Validation.failure('Genesis block must contain data.'));
-  });
-
-  it('should throw an error when trying to modify a frozen property (timestamp)', () => {
-    block = new Block(1, genesisBlock.hash, 'block 2');
-    expect(() => {
-      // @ts-ignore
-      block.timestamp = 1234567890;
-    })
-      .toThrowError("Cannot assign to read only property 'timestamp' of object '#<Block>'");
+    block = new Block({
+      index: 0,
+      previousHash: '',
+      data: ''
+    } as Block);
+    expect(block.isValid(-1, '', 4)).toEqual(Validation.failure('Invalid data.'));
   });
 
   it('should be invalid (timestamp)', () => {
-    block = new Block(1, genesisBlock.hash, 'block 2', -1);
-    expect(block.isValid(genesisBlock.index, genesisBlock.hash)).toEqual(Validation.failure('Timestamp is invalid.'));
+    block = new Block({
+      index: 1,
+      previousHash: genesisBlock.hash,
+      data: 'block 2',
+      timestamp: - 1
+    } as Block);
+    expect(block.isValid(genesisBlock.index, genesisBlock.hash, 4)).toEqual(Validation.failure('Invalid timestamp.'));
   });
 
   it('should be invalid (index)', () => {
-    block = new Block(-1, genesisBlock.hash, 'block 2');
-    expect(block.isValid(genesisBlock.index, genesisBlock.hash)).toEqual(Validation.failure('Block index is invalid.'));
+    block = new Block({
+      index: -1,
+      previousHash: genesisBlock.hash,
+      data: 'block 2'
+    } as Block);
+    expect(block.isValid(genesisBlock.index, genesisBlock.hash, 4)).toEqual(Validation.failure('Invalid previous index.'));
   });
 
   it('should be invalid (data)', () => {
-    block = new Block(1, genesisBlock.hash, '');
-    expect(block.isValid(genesisBlock.index, genesisBlock.hash)).toEqual(Validation.failure('Block data is invalid.'));
+    block = new Block({
+      index: 1,
+      previousHash: genesisBlock.hash,
+      data: ''
+    } as Block);
+    expect(block.isValid(genesisBlock.index, genesisBlock.hash, 4)).toEqual(Validation.failure('Invalid data.'));
   });
 
   it('should be invalid (previous index)', () => {
-    block = new Block(2, genesisBlock.hash, 'block 2');
-    expect(block.isValid(genesisBlock.index, genesisBlock.hash)).toEqual(Validation.failure('Block index is invalid.'));
+    block = new Block({
+      index: -1,
+      previousHash: genesisBlock.hash,
+      data: 'block 2'
+    } as Block);
+    expect(block.isValid(genesisBlock.index, genesisBlock.hash, 4)).toEqual(Validation.failure('Invalid previous index.'));
   });
 
   it('should fail validation if the previous hash is invalid', () => {
-    const previousBlock = new Block(0, '', 'genesisData');
-    const block = new Block(1, 'invalidPreviousHash', 'blockData');
-    const validation = block.isValid(previousBlock.index, previousBlock.hash);
-    expect(validation.message).toBe('Previous hash is invalid.');
+    const previousBlock = new Block({
+      index: 0,
+      previousHash: '',
+      data: 'Genesis Block'
+    } as Block);
+
+    const block = new Block({
+      index: 1,
+      previousHash: 'invalidPreviousHash',
+      data: 'blockData'
+    } as Block);
+
+    const validation = block.isValid(previousBlock.index, previousBlock.hash, 4);
+    expect(validation.message).toBe('Invalid previous hash.');
   });
 
-  it('should be invalid (hash)', () => {
-    block = new Block(1, '', 'block 2');
-    expect(() => {
-      // @ts-ignore
-      block.hash = 'invalid hash';
-    })
-      .toThrowError("Cannot assign to read only property 'hash' of object '#<Block>'");
+  it('should return Invalid mined if nonce or miner is invalid', () => {
+    const previousBlock = new Block({
+      index: 0,
+      previousHash: '',
+      data: 'Genesis Block'
+    } as Block);
+
+    const block = new Block({
+      index: 1,
+      previousHash: previousBlock.hash,
+      data: 'blockData',
+      nonce: 0,
+      miner: ''
+    } as Block);
+
+    const validation = block.isValid(previousBlock.index, previousBlock.hash, 4);
+    expect(validation.message).toBe('Invalid mined.');
+  });
+
+  it('should return Invalid hash if the hash is invalid', () => {
+    const previousBlock = new Block({
+      index: 0,
+      previousHash: '',
+      data: 'Genesis Block'
+    } as Block);
+
+    const block = new Block({
+      index: 1,
+      previousHash: previousBlock.hash,
+      data: 'blockData',
+      nonce: 1,
+      miner: 'miner'
+    } as Block);
+
+    block.hash = 'invalidHash';
+
+    const validation = block.isValid(previousBlock.index, previousBlock.hash, 4);
+    expect(validation.message).toBe('Invalid hash.');
+  });
+
+  it('should create a valid block when the index, previousHash or data is not provided in the constructor', () => {
+    const block1 = new Block({
+      previousHash: genesisBlock.hash,
+      data: 'blockData'
+    } as Block);
+
+    const block2 = new Block({
+      index: 1,
+      data: 'blockData'
+    } as Block);
+
+    const block3 = new Block({
+      index: 1,
+      previousHash: genesisBlock.hash
+    } as Block);
+
+    expect(block1).toBeDefined();
+    expect(block2).toBeDefined();
+    expect(block3).toBeDefined();
   });
 });
