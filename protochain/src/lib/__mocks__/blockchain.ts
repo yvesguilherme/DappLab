@@ -13,7 +13,7 @@ class Blockchain {
    * Initializes the blockchain with a genesis block.
    */
   constructor() {
-    this.#chain = [new Block(this.#nextIndex, 'abc', 'Genesis Block')];
+    this.#chain = [new Block({ index: this.#nextIndex, previousHash: 'abc', data: 'Genesis Block' } as Block)];
     this.#nextIndex++;
   }
 

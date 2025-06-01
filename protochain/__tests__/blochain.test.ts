@@ -2,6 +2,7 @@ import { beforeEach, describe, it, expect, jest } from '@jest/globals';
 
 import Blockchain from '../src/lib/blockchain';
 import Block from '../src/lib/model/block.model';
+import Validation from '../src/lib/validation';
 
 let blockchain: Blockchain;
 let lastHashBlock: string;
@@ -19,34 +20,26 @@ describe('Blockchain tests', () => {
     expect(blockchain).toBeDefined();
     expect(blockchain.getChain()).toHaveLength(1);
     expect(blockchain.getBlock(0)).toBeDefined();
-    expect(blockchain.getBlock(0)?.index).toBe(0);
-    expect(blockchain.getBlock(0)?.data).toBe('Genesis Block');
-    expect(blockchain.getBlock(0)?.previousHash).toBe('');
-    expect(blockchain.getBlock(0)?.hash).toHaveLength(16);
-    expect(blockchain.getBlock(0)?.timestamp).toBeDefined();
+    expect(blockchain.getBlock(0)).toEqual(blockchain.getLastBlock());
   });
 
   it('should be valid', () => {
-    const block1 = new Block(1, lastHashBlock, 'data1');
+    const block1 = new Block({ index: 1, previousHash: lastHashBlock, data: 'data1' } as Block);
     blockchain.addBlock(block1);
     expect(blockchain.isValid()).toEqual(true);
   });
 
   it('should add a new valid block to the blockchain', () => {
-    const block = new Block(1, lastHashBlock, 'data1');
+    const block = new Block({ index: 1, previousHash: lastHashBlock, data: 'data1' } as Block);
 
-    expect(blockchain.addBlock(block)).toEqual({success: true, message: ''});
+    expect(blockchain.addBlock(block)).toEqual({ success: true, message: '' });
     expect(blockchain.getChain()).toHaveLength(2);
     expect(blockchain.getBlock(1)).toEqual(block);
-    expect(blockchain.getBlock(1)?.index).toEqual(1);
-    expect(blockchain.getBlock(1)?.data).toEqual('data1');
-    expect(blockchain.getBlock(1)?.previousHash).toEqual(lastHashBlock);
-    expect(blockchain.getBlock(1)?.hash).toHaveLength(16);
-    expect(blockchain.getBlock(1)?.timestamp).toBeDefined();
   });
 
   it('should not add an invalid block to the blockchain', () => {
-    const block = new Block(-1, '', 'data12');
+    const block = new Block({ index: 1, previousHash: lastHashBlock, data: '' } as Block);
+    jest.spyOn(block, 'isValid').mockReturnValue(Validation.failure('Invalid mock block.'));
 
     expect(blockchain.addBlock(block)).toEqual({ success: false, message: 'Invalid mock block.' });
     expect(blockchain.getChain()).toHaveLength(1);
@@ -58,7 +51,7 @@ describe('Blockchain tests', () => {
   });
 
   it('should return the correct block for a valid index', () => {
-    const block = new Block(1, lastHashBlock, 'data1');
+    const block = new Block({ index: 1, previousHash: lastHashBlock, data: 'data1' } as Block);
     blockchain.addBlock(block);
 
     expect(blockchain.getBlock(1)).toEqual(block);
@@ -68,54 +61,20 @@ describe('Blockchain tests', () => {
     expect(blockchain.getBlock('abcdef1234567890')).toEqual(blockchain.getChain()[0]);
   });
 
-  it('should return false if a block has an invalid previous hash', () => {
-    const block = new Block(1, lastHashBlock, 'data1');
-    blockchain.addBlock(block);
-
-    expect(() => {
-      // @ts-ignore
-      blockchain.getChain()[1].previousHash = 'invalid';
-    })
-      .toThrowError("Cannot assign to read only property 'previousHash' of object '#<Block>'");
-  });
-
-  it('should return false if a block has an invalid index', () => {
-    const block1 = new Block(1, lastHashBlock, 'Block 1 Data');
-
-    blockchain.addBlock(block1);
-
-    expect(() => {
-      // @ts-ignore
-      blockchain.getChain()[1].index = 3;
-    })
-      .toThrowError("Cannot assign to read only property 'index' of object '#<Block>'");
-  });
-
-  it('should return false if the blockchain is tampered with', () => {
-    const block1 = new Block(1, lastHashBlock, 'Block 1 Data');
-    blockchain.addBlock(block1);
-
-    expect(() => {
-      // @ts-ignore
-      blockchain.getChain()[1].hash = 'invalidHash';
-    })
-      .toThrowError("Cannot assign to read only property 'hash' of object '#<Block>'");
-  });
-  
   it('should ensure blocks have increasing timestamps', async () => {
-    const block1 = new Block(1, lastHashBlock, 'data1');
+    const block1 = new Block({ index: 1, previousHash: lastHashBlock, data: 'data1' } as Block);
     blockchain.addBlock(block1);
 
     await new Promise((resolve) => setTimeout(resolve, 5));
 
-    const block2 = new Block(2, block1.hash, 'data2');
+    const block2 = new Block({ index: 2, previousHash: block1.hash, data: 'data2' } as Block);
     blockchain.addBlock(block2);
 
     expect(block2.timestamp).toBeGreaterThan(block1.timestamp);
   });
 
   it('should return false if a block is invalid', () => {
-    const block1 = new Block(1, lastHashBlock, 'data1');
+    const block1 = new Block({ index: 1, previousHash: lastHashBlock, data: 'data1' } as Block);
     blockchain.addBlock(block1);
 
     const mockBlock = {

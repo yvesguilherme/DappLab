@@ -20,6 +20,8 @@ describe('blochain-server tests', () => {
         hash: 'abcdef1234567890',
         index: 0,
         previousHash: 'abc',
+        miner: '',
+        nonce: 0,
         timestamp: expect.any(Number),
       },
     };
@@ -38,6 +40,8 @@ describe('blochain-server tests', () => {
       hash: 'abcdef1234567890',
       index: 0,
       previousHash: 'abc',
+      miner: '',
+      nonce: 0,
       timestamp: expect.any(Number)
     };
 
@@ -55,6 +59,8 @@ describe('blochain-server tests', () => {
       hash: 'abcdef1234567890',
       index: 0,
       previousHash: 'abc',
+      miner: '',
+      nonce: 0,
       timestamp: expect.any(Number)
     };
 
@@ -86,6 +92,8 @@ describe('blochain-server tests', () => {
     expect(response.body).toEqual({
       ...newBlock,
       hash: expect.any(String),
+      nonce: expect.any(Number),
+      miner: '',
       timestamp: expect.any(Number),
     });
   });
@@ -100,7 +108,7 @@ describe('blochain-server tests', () => {
     const response = await request(app)
       .post('/api/block')
       .send(newBlock);
-
+    
     expect(response.status).toEqual(422);
     expect(response.body).toEqual({ error: 'Unprocessable Content' });
   });

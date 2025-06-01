@@ -45,13 +45,17 @@ apiRouter.get('/block/:indexOrHash', (req: express.Request, res: express.Respons
 apiRouter.post('/block', (req: express.Request, res: express.Response): any => {
   const data = req.body;
 
-  if (!data.previousHash || !data.index || !data.data) {
+  if (!isValidBlockPayload(data)) {
     return res
       .status(422)
       .json({ error: 'Unprocessable Content' });
   }
 
-  const block = new Block(data.index, data.previousHash, data.data);
+  const block = new Block({
+    index: data.index,
+    previousHash: data.previousHash,
+    data: data.data
+  });
   const blockchainIsValid = blockchain.addBlock(block);
 
   if (!blockchainIsValid.success) {
@@ -62,6 +66,16 @@ apiRouter.post('/block', (req: express.Request, res: express.Response): any => {
 
   return res.status(201).json(block);
 });
+
+function isValidBlockPayload(data: any): boolean {
+  return data.previousHash !== undefined &&
+    data.index !== undefined &&
+    typeof data.index === 'number' &&
+    !isNaN(data.index) &&
+    data.data !== undefined &&
+    typeof data.previousHash === 'string' &&
+    data.previousHash.length > 0;
+}
 
 app.use('/api', apiRouter);
 

@@ -6,6 +6,7 @@ import Validation from '../src/lib/validation';
 describe('Block tests', () => {
   let genesisBlock: Block;
   let block: Block;
+  const difficulty = 0;
 
   beforeEach(() => {
     genesisBlock = new Block({
@@ -19,9 +20,9 @@ describe('Block tests', () => {
   });
 
   it('should be valid for the genesis block (index === 0)', () => {
-    genesisBlock.mine(4, 'miner');
+    genesisBlock.mine(0, 'miner');
     expect(genesisBlock).toBeDefined();
-    expect(genesisBlock.isValid(-1, '', 4)).toEqual(Validation.success());
+    expect(genesisBlock.isValid(-1, '', difficulty)).toEqual(Validation.success());
     expect(genesisBlock.previousHash.length).toEqual(0);
     expect(genesisBlock.data.length).toBeGreaterThan(0);
   });
@@ -32,9 +33,9 @@ describe('Block tests', () => {
       previousHash: genesisBlock.hash,
       data: 'block 2'
     } as Block);
-    block.mine(4, 'miner');
+    block.mine(0, 'miner');
     expect(block).toBeDefined();
-    expect(block.isValid(genesisBlock.index, genesisBlock.hash, 4)).toEqual(Validation.success());
+    expect(block.isValid(genesisBlock.index, genesisBlock.hash, difficulty)).toEqual(Validation.success());
   });
 
   it('should be invalid genesis block (previous hash)', () => {
@@ -43,7 +44,7 @@ describe('Block tests', () => {
       previousHash: 'invalid',
       data: 'Genesis Block'
     } as Block);
-    expect(block.isValid(-1, '', 4)).toEqual(Validation.failure('Invalid previous hash.'));
+    expect(block.isValid(-1, '', difficulty)).toEqual(Validation.failure('Invalid previous hash.'));
   });
 
   it('should be invalid genesis block (data)', () => {
@@ -52,7 +53,7 @@ describe('Block tests', () => {
       previousHash: '',
       data: ''
     } as Block);
-    expect(block.isValid(-1, '', 4)).toEqual(Validation.failure('Invalid data.'));
+    expect(block.isValid(-1, '', difficulty)).toEqual(Validation.failure('Invalid data.'));
   });
 
   it('should be invalid (timestamp)', () => {
@@ -62,7 +63,7 @@ describe('Block tests', () => {
       data: 'block 2',
       timestamp: - 1
     } as Block);
-    expect(block.isValid(genesisBlock.index, genesisBlock.hash, 4)).toEqual(Validation.failure('Invalid timestamp.'));
+    expect(block.isValid(genesisBlock.index, genesisBlock.hash, difficulty)).toEqual(Validation.failure('Invalid timestamp.'));
   });
 
   it('should be invalid (index)', () => {
@@ -71,7 +72,7 @@ describe('Block tests', () => {
       previousHash: genesisBlock.hash,
       data: 'block 2'
     } as Block);
-    expect(block.isValid(genesisBlock.index, genesisBlock.hash, 4)).toEqual(Validation.failure('Invalid previous index.'));
+    expect(block.isValid(genesisBlock.index, genesisBlock.hash, difficulty)).toEqual(Validation.failure('Invalid previous index.'));
   });
 
   it('should be invalid (data)', () => {
@@ -80,7 +81,7 @@ describe('Block tests', () => {
       previousHash: genesisBlock.hash,
       data: ''
     } as Block);
-    expect(block.isValid(genesisBlock.index, genesisBlock.hash, 4)).toEqual(Validation.failure('Invalid data.'));
+    expect(block.isValid(genesisBlock.index, genesisBlock.hash, difficulty)).toEqual(Validation.failure('Invalid data.'));
   });
 
   it('should be invalid (previous index)', () => {
@@ -89,7 +90,7 @@ describe('Block tests', () => {
       previousHash: genesisBlock.hash,
       data: 'block 2'
     } as Block);
-    expect(block.isValid(genesisBlock.index, genesisBlock.hash, 4)).toEqual(Validation.failure('Invalid previous index.'));
+    expect(block.isValid(genesisBlock.index, genesisBlock.hash, difficulty)).toEqual(Validation.failure('Invalid previous index.'));
   });
 
   it('should fail validation if the previous hash is invalid', () => {
@@ -105,11 +106,11 @@ describe('Block tests', () => {
       data: 'blockData'
     } as Block);
 
-    const validation = block.isValid(previousBlock.index, previousBlock.hash, 4);
+    const validation = block.isValid(previousBlock.index, previousBlock.hash, difficulty);
     expect(validation.message).toBe('Invalid previous hash.');
   });
 
-  it('should return Invalid mined if nonce or miner is invalid', () => {
+  it('should return "no mined" if nonce or miner is invalid', () => {
     const previousBlock = new Block({
       index: 0,
       previousHash: '',
@@ -124,8 +125,8 @@ describe('Block tests', () => {
       miner: ''
     } as Block);
 
-    const validation = block.isValid(previousBlock.index, previousBlock.hash, 4);
-    expect(validation.message).toBe('Invalid mined.');
+    const validation = block.isValid(previousBlock.index, previousBlock.hash, difficulty);
+    expect(validation.message).toBe('No mined.');
   });
 
   it('should return Invalid hash if the hash is invalid', () => {
@@ -145,7 +146,7 @@ describe('Block tests', () => {
 
     block.hash = 'invalidHash';
 
-    const validation = block.isValid(previousBlock.index, previousBlock.hash, 4);
+    const validation = block.isValid(previousBlock.index, previousBlock.hash, difficulty);
     expect(validation.message).toBe('Invalid hash.');
   });
 

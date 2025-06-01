@@ -6,9 +6,11 @@ import Validation from '../../validation.ts';
 class Block {
   readonly index: number;
   readonly timestamp: number;
-  readonly hash: string;
   readonly previousHash: string;
   readonly data: string;
+  hash: string;
+  nonce: number;
+  miner: string;
   
   /**
    * Create a new mock Block
@@ -17,17 +19,17 @@ class Block {
    * @param data the data to be stored in the block
    * @param timestamp the timestamp of the block
    */
-  constructor(index: number, previousHash: string, data: string, timestamp = Date.now()) {
-    this.index = index;
-    this.timestamp = timestamp;
-    this.previousHash = previousHash ?? '';
-    this.data = data ?? '';
-    this.hash = this.#getHash();
-
-    Object.freeze(this);
+  constructor(block: Partial<Block>) {
+    this.index = block?.index ?? 0;
+    this.timestamp = block?.timestamp ?? Date.now();
+    this.previousHash = block?.previousHash ?? '';
+    this.data = block?.data ?? '';
+    this.hash = block?.hash ?? this.getHash();
+    this.nonce = block?.nonce ?? 0;
+    this.miner = block?.miner ?? '';
   }
 
-  #getHash(): string {
+  getHash(): string {
     return "abcdef1234567890";
   }
 
@@ -43,6 +45,18 @@ class Block {
     }
 
     return Validation.success();
+  }
+
+  mine(difficulty: number, miner: string): void {
+    this.miner = miner;
+    const prefix = this.createPrefix(difficulty);
+
+    this.nonce = 0;
+    this.hash = prefix + "abcdef1234567890".slice(prefix.length);
+  }
+
+  private createPrefix(difficulty: number): string {
+    return '0'.repeat(difficulty + 1);
   }
 }
 

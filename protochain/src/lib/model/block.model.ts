@@ -20,7 +20,7 @@ class Block {
    * @param nonce The nonce used to mine the block
    * @param miner The miner who mined the block
    */
-  constructor(block?: Block) {
+  constructor(block: Partial<Block>) {
     this.index = block?.index ?? 0;
     this.timestamp = block?.timestamp ?? Date.now();
     this.previousHash = block?.previousHash ?? '';
@@ -28,8 +28,6 @@ class Block {
     this.hash = block?.hash ?? this.getHash();
     this.nonce = block?.nonce ?? 0;
     this.miner = block?.miner ?? '';
-
-    // Object.freeze(this);
   }
 
   /**
@@ -51,10 +49,10 @@ class Block {
     this.miner = miner;
     const prefix = this.createPrefix(difficulty);
 
-    while (!this.hash.startsWith(prefix)) {
+    do {
       this.nonce++;
       this.hash = this.getHash();
-    }
+    } while (!this.hash.startsWith(prefix));
   }
 
   /**
@@ -69,7 +67,7 @@ class Block {
     if (!this.data) return Validation.failure('Invalid data.');
     if (this.timestamp < 1) return Validation.failure('Invalid timestamp.');
     if (previousHash !== this.previousHash) return Validation.failure('Invalid previous hash.');
-    if (!this.nonce || !this.miner) return Validation.failure('Invalid mined.');
+    if (!this.nonce || !this.miner) return Validation.failure('No mined.');
 
     const prefix = this.createPrefix(difficulty);
 

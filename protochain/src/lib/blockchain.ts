@@ -2,11 +2,12 @@ import Block from './model/block.model.ts';
 import Validation from './validation.ts';
 
 class Blockchain {
+  static readonly DIFFCULTY_FACTOR = 2;
   readonly #chain: Block[];
   #nextIndex = 0;
 
   constructor() {
-    this.#chain = [new Block(this.#nextIndex, '', 'Genesis Block')];
+    this.#chain = [new Block({ index: this.#nextIndex, previousHash: '', data: 'Genesis Block' } as Block)];
     this.#nextIndex++;
   }
 
@@ -26,10 +27,14 @@ class Blockchain {
     return this.#chain.find((b) => b.hash === hashOrIndex) || null;
   }
 
+  getDifficulty(): number {
+    return Math.ceil(this.#chain.length / Blockchain.DIFFCULTY_FACTOR);
+  }
+
   addBlock(block: Block): Validation {
     const lastBlock = this.getLastBlock();
 
-    const blockValidation: Validation = block.isValid(lastBlock.index, lastBlock.hash);
+    const blockValidation: Validation = block.isValid(lastBlock.index, lastBlock.hash, this.getDifficulty());
 
     if (blockValidation.success) {
       this.#chain.push(block);
@@ -44,7 +49,7 @@ class Blockchain {
       const currentBlock = this.#chain[i];
       const previousBlock = this.#chain[i - 1];
 
-      const isValid = currentBlock.isValid(previousBlock.index, previousBlock.hash);
+      const isValid = currentBlock.isValid(previousBlock.index, previousBlock.hash, this.getDifficulty());
 
       if (!isValid) {
         return false;
