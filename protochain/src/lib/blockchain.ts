@@ -1,8 +1,10 @@
 import Block from './model/block.model.ts';
 import Validation from './validation.ts';
+import IBlockInfo from './model/block-info.model.ts';
 
 class Blockchain {
   static readonly DIFFCULTY_FACTOR = 2;
+  static readonly MAX_DIFFICULTY = 62;
   readonly #chain: Block[];
   #nextIndex = 0;
 
@@ -57,6 +59,21 @@ class Blockchain {
     }
 
     return true;
+  }
+
+  getFeePerTx(): number {
+    return 1;
+  }
+
+  getNextBlock(): IBlockInfo {
+    const data = new Date().toISOString();
+    const difficulty = this.getDifficulty();
+    const previousHash = this.getLastBlock().hash;
+    const index = this.#chain.length;
+    const feePerTx = this.getFeePerTx();
+    const maxDifficulty = Blockchain.MAX_DIFFICULTY;
+
+    return { data, index, previousHash, difficulty, maxDifficulty, feePerTx } as IBlockInfo;
   }
 }
 

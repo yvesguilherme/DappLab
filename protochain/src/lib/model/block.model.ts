@@ -20,14 +20,14 @@ class Block {
    * @param nonce The nonce used to mine the block
    * @param miner The miner who mined the block
    */
-  constructor(block: Partial<Block>) {
+  constructor(block?: Block) {
     this.index = block?.index ?? 0;
     this.timestamp = block?.timestamp ?? Date.now();
     this.previousHash = block?.previousHash ?? '';
     this.data = block?.data ?? '';
-    this.hash = block?.hash ?? this.getHash();
     this.nonce = block?.nonce ?? 0;
     this.miner = block?.miner ?? '';
+    this.hash = block?.hash ?? this.getHash();
   }
 
   /**
@@ -77,7 +77,7 @@ class Block {
   }
 
   private createPrefix(difficulty: number): string {
-    return '0'.repeat(difficulty + 1);
+    return '0'.repeat(difficulty);
   }
 }
 
