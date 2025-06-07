@@ -1,12 +1,13 @@
 import { createHash } from 'crypto';
 
 import Validation from '../validation.ts';
+import BlockInfo from './block-info.model.ts';
 
 class Block {
-  readonly index: number;
-  readonly timestamp: number;
-  readonly previousHash: string;
-  readonly data: string;
+  index: number;
+  timestamp: number;
+  previousHash: string;
+  data: string;
   hash: string;
   nonce: number;
   miner: string;
@@ -55,6 +56,10 @@ class Block {
     } while (!this.hash.startsWith(prefix));
   }
 
+  private createPrefix(difficulty: number): string {
+    return '0'.repeat(difficulty);
+  }
+
   /**
    * Check if the block is valid
    * @param previousIndex The index of the previous block
@@ -76,8 +81,12 @@ class Block {
     return Validation.success();
   }
 
-  private createPrefix(difficulty: number): string {
-    return '0'.repeat(difficulty);
+  static fromBlockInfoToBlock(blockInfo: BlockInfo): Block {
+    const block = new Block();
+    block.index = blockInfo.index;
+    block.previousHash = blockInfo.previousHash;
+    block.data = blockInfo.data;
+    return block;
   }
 }
 

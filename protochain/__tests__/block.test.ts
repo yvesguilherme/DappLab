@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, jest, afterAll } from '@jest/globals';
 
 import Block from '../src/lib/model/block.model';
+import BlockInfo from '../src/lib/model/block-info.model';
 import Validation from '../src/lib/validation';
 
 describe('Block tests', () => {
@@ -169,5 +170,25 @@ describe('Block tests', () => {
     expect(block1).toBeDefined();
     expect(block2).toBeDefined();
     expect(block3).toBeDefined();
+  });
+
+  it('should create from block info', () => {
+    const block = Block.fromBlockInfoToBlock({
+      index: 1,
+      previousHash: genesisBlock.hash,
+      data: 'block 2',
+      difficulty: 0,
+      feePerTx: 1,
+      maxDifficulty: 62
+    } as BlockInfo);
+
+    block.mine(difficulty, 'miner');
+
+    const valid = block.isValid(genesisBlock.index, genesisBlock.hash, difficulty);
+    expect(valid).toEqual(Validation.success());
+    expect(valid.success).toBeTruthy();
+    expect(block.index).toEqual(1);
+    expect(block.previousHash).toEqual(genesisBlock.hash);
+    expect(block.data).toEqual('block 2');
   });
 });

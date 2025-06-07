@@ -1,3 +1,4 @@
+import IBlockInfo from '../model/block-info.model.ts';
 import Block from '../model/block.model.ts';
 import Validation from '../validation.ts';
 
@@ -5,6 +6,7 @@ import Validation from '../validation.ts';
  * Mock Blockchain class for testing purposes.
  */
 class Blockchain {
+  static readonly MAX_DIFFICULTY = 62;
   readonly #chain: Block[];
   #nextIndex = 0;
 
@@ -46,6 +48,21 @@ class Blockchain {
 
   isValid(): boolean {
     return true;
+  }
+
+  getFeePerTx(): number {
+    return 1;
+  }
+
+  getNextBlock(): IBlockInfo {
+    const data = new Date().toISOString();
+    const difficulty = 0;
+    const previousHash = this.getLastBlock().hash;
+    const index = 1;
+    const feePerTx = this.getFeePerTx();
+    const maxDifficulty = Blockchain.MAX_DIFFICULTY;
+
+    return { data, index, previousHash, difficulty, maxDifficulty, feePerTx } as IBlockInfo;
   }
 }
 

@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { jest, describe, expect, test, beforeEach, afterEach } from '@jest/globals';
+import { jest, describe, expect, test } from '@jest/globals';
 
 import { app } from '../src/server/blockchain-server.ts';
 
@@ -47,6 +47,15 @@ describe('blochain-server tests', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(expectedBlock);
+  });
+
+  test('GET /api/next - should get next block info', async () => {
+    const response = await request(app)
+      .get('/api/block/next')
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body.index).toEqual(1);
   });
 
   test('GET /api/:hash - should return genesis', async () => {

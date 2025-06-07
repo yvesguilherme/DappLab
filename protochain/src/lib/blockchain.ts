@@ -37,7 +37,7 @@ class Blockchain {
     const lastBlock = this.getLastBlock();
 
     const blockValidation: Validation = block.isValid(lastBlock.index, lastBlock.hash, this.getDifficulty());
-
+    
     if (blockValidation.success) {
       this.#chain.push(block);
       this.#nextIndex++;

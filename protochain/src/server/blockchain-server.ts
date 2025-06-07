@@ -1,12 +1,13 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 
 import log from '../util/log.ts';
 import Blockchain from '../lib/blockchain.ts';
 import HttpLog from '../util/http-log.ts';
 import Block from '../lib/model/block.model.ts';
+import configEnv from '../config/config-env.ts';
 
 const app = express();
-const port = process.env.PORT ?? 3000;
+const port = configEnv.BLOCKCHAIN_PORT ?? 3000;
 
 app.use(express.json());
 
@@ -17,7 +18,7 @@ if (process.argv.includes('--run') || process.argv.includes('--r')) {
 const blockchain = new Blockchain();
 const apiRouter = express.Router();
 
-apiRouter.get('/status', (req: express.Request, res: express.Response) => {
+apiRouter.get('/status', (req: Request, res: Response) => {
   const status = {
     numberOfBlocks: blockchain.getChain().length,
     isValid: blockchain.isValid(),
@@ -27,7 +28,11 @@ apiRouter.get('/status', (req: express.Request, res: express.Response) => {
   res.json(status);
 });
 
-apiRouter.get('/block/:indexOrHash', (req: express.Request, res: express.Response): any => {
+apiRouter.get('/block/next', (req: Request, res: Response) => {
+  res.json(blockchain.getNextBlock());
+});
+
+apiRouter.get('/block/:indexOrHash', (req: Request, res: Response): any => {
   const { indexOrHash } = req.params;
   const block: Block | null = /^\d+$/.test(indexOrHash)
     ? blockchain.getBlock(parseInt(indexOrHash, 10))
@@ -42,7 +47,7 @@ apiRouter.get('/block/:indexOrHash', (req: express.Request, res: express.Respons
     .json({ error: 'Block not found' });
 });
 
-apiRouter.post('/block', (req: express.Request, res: express.Response): any => {
+apiRouter.post('/block', (req: Request, res: Response): any => {
   const data = req.body;
 
   if (!isValidBlockPayload(data)) {
@@ -54,8 +59,12 @@ apiRouter.post('/block', (req: express.Request, res: express.Response): any => {
   const block = new Block({
     index: data.index,
     previousHash: data.previousHash,
-    data: data.data
-  });
+    data: data.data,
+    timestamp: data.timestamp,
+    miner: data.miner,
+    nonce: data.nonce,
+    hash: data.hash
+  } as Block);
   const blockchainIsValid = blockchain.addBlock(block);
 
   if (!blockchainIsValid.success) {

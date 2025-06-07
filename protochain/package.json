@@ -5,7 +5,8 @@
   "scripts": {
     "build": "npx tsc",
     "dev": "NODE_NO_WARNINGS=1 npx nodemon --watch src --exec node --import ./loader.js src/lib/blockchain.ts -e ts",
-    "blockchain": "NODE_NO_WARNINGS=1 node --import ./loader.js src/server/blockchain-server.ts --r",
+    "blockchain": "NODE_NO_WARNINGS=1 node --env-file=.env --import ./loader.js src/server/blockchain-server.ts --r",
+    "miner": "NODE_NO_WARNINGS=1 node --env-file=.env --import ./loader.js src/client/miner-client.ts --r",
     "start": "node dist/blockchain.js",
     "test": "jest --no-cache"
   },
@@ -29,6 +30,7 @@
   },
   "dependencies": {
     "@types/express": "^5.0.1",
+    "axios": "^1.9.0",
     "express": "^5.1.0",
     "pino": "^9.6.0",
     "pino-pretty": "^13.0.0"
