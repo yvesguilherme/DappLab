@@ -1,13 +1,13 @@
 import { beforeEach, describe, it, expect, jest } from '@jest/globals';
 
 import Blockchain from '../src/lib/blockchain';
-import Block from '../src/lib/model/block.model';
+import Block from '../src/lib/block';
 import Validation from '../src/lib/validation';
 
 let blockchain: Blockchain;
 let lastHashBlock: string;
 
-jest.mock('../src/lib/model/block.model');
+jest.mock('../src/lib/block');
 
 beforeEach(() => {
   blockchain = new Blockchain();

@@ -1,5 +1,5 @@
 import IBlockInfo from '../model/block-info.model.ts';
-import Block from '../model/block.model.ts';
+import Block from '../block.ts';
 import Validation from '../validation.ts';
 
 /**

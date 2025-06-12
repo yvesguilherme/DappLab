@@ -3,7 +3,7 @@ import express, { Request, Response } from 'express';
 import log from '../util/log.ts';
 import Blockchain from '../lib/blockchain.ts';
 import HttpLog from '../util/http-log.ts';
-import Block from '../lib/model/block.model.ts';
+import Block from '../lib/block.ts';
 import configEnv from '../config/config-env.ts';
 
 const app = express();

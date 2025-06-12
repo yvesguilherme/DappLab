@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, jest, afterAll } from '@jest/globals';
 
-import Block from '../src/lib/model/block.model';
+import Block from '../src/lib/block';
 import BlockInfo from '../src/lib/model/block-info.model';
 import Validation from '../src/lib/validation';
 

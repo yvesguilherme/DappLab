@@ -2,7 +2,7 @@ import axios from 'axios';
 
 import log from '../util/log.ts';
 import BlockInfo from '../lib/model/block-info.model.ts';
-import Block from '../lib/model/block.model.ts';
+import Block from '../lib/block.ts';
 import configEnv from '../config/config-env.ts';
 
 const BLOCKCHAIN_API_URL = configEnv.BLOCKCHAIN_SERVER ?? 'http://localhost:3000/api';

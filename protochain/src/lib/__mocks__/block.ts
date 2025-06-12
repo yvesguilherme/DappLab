@@ -1,4 +1,4 @@
-import Validation from '../../validation.ts';
+import Validation from '../validation';
 
 /**
  * Mock Block class for testing purposes

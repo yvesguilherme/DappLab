@@ -1,10 +1,10 @@
 import request from 'supertest';
 import { jest, describe, expect, test } from '@jest/globals';
 
-import { app } from '../src/server/blockchain-server.ts';
+import { app } from '../src/server/blockchain-server';
 
-jest.mock('../src/lib/model/block.model.ts');
-jest.mock('../src/lib/blockchain.ts');
+jest.mock('../src/lib/block');
+jest.mock('../src/lib/blockchain');
 
 describe('blochain-server tests', () => {
   test('GET /api/status - should return status', async () => {

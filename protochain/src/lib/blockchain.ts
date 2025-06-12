@@ -1,6 +1,6 @@
-import Block from './model/block.model.ts';
-import Validation from './validation.ts';
-import IBlockInfo from './model/block-info.model.ts';
+import Block from './block';
+import Validation from './validation';
+import IBlockInfo from './model/block-info.model';
 
 class Blockchain {
   static readonly DIFFCULTY_FACTOR = 2;

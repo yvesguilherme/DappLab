@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 
-import Validation from '../validation.ts';
-import BlockInfo from './block-info.model.ts';
+import Validation from './validation.ts';
+import BlockInfo from './model/block-info.model.ts';
 
 class Block {
   index: number;
