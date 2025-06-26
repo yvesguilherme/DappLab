@@ -1,6 +1,8 @@
 import IBlockInfo from '../model/block-info.model.ts';
 import Block from '../block.ts';
 import Validation from '../validation.ts';
+import Transaction from '../transaction.ts';
+import TransactionType from '../model/transaction.model.ts';
 
 /**
  * Mock Blockchain class for testing purposes.
@@ -15,7 +17,11 @@ class Blockchain {
    * Initializes the blockchain with a genesis block.
    */
   constructor() {
-    this.#chain = [new Block({ index: this.#nextIndex, previousHash: 'abc', data: 'Genesis Block' } as Block)];
+    this.#chain = [new Block({
+      index: this.#nextIndex, 
+      previousHash: 'abc', 
+      transactions: [new Transaction({ data: 'tx1', type: TransactionType.FEE } as Transaction)]
+    } as Block)];
     this.#nextIndex++;
   }
 
@@ -55,14 +61,14 @@ class Blockchain {
   }
 
   getNextBlock(): IBlockInfo {
-    const data = new Date().toISOString();
+    const transactions = [new Transaction({ data: 'Mock transaction' } as Transaction)];
     const difficulty = 0;
     const previousHash = this.getLastBlock().hash;
     const index = 1;
     const feePerTx = this.getFeePerTx();
     const maxDifficulty = Blockchain.MAX_DIFFICULTY;
 
-    return { data, index, previousHash, difficulty, maxDifficulty, feePerTx } as IBlockInfo;
+    return { transactions, index, previousHash, difficulty, maxDifficulty, feePerTx } as IBlockInfo;
   }
 }
 

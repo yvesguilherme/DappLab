@@ -1,3 +1,5 @@
+import Transaction from "../transaction";
+
 /**
  * The BlockInfo interface represents the structure of a block in the blockchain.
  */
@@ -7,5 +9,5 @@ export default interface IBlockInfo {
   difficulty: number;
   maxDifficulty: number;
   feePerTx: number;
-  data: string;
+  transactions: Transaction[];
 }

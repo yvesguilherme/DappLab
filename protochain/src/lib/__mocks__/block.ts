@@ -1,13 +1,14 @@
 import Validation from '../validation';
+import Transaction from './transaction';
 
 /**
  * Mock Block class for testing purposes
  */
 class Block {
-  readonly index: number;
-  readonly timestamp: number;
-  readonly previousHash: string;
-  readonly data: string;
+  index: number;
+  timestamp: number;
+  previousHash: string;
+  transactions: Transaction[];
   hash: string;
   nonce: number;
   miner: string;
@@ -23,7 +24,7 @@ class Block {
     this.index = block?.index ?? 0;
     this.timestamp = block?.timestamp ?? Date.now();
     this.previousHash = block?.previousHash ?? '';
-    this.data = block?.data ?? '';
+    this.transactions = block?.transactions ?? [] as Transaction[];
     this.nonce = block?.nonce ?? 0;
     this.miner = block?.miner ?? '';
     this.hash = block?.hash ?? this.getHash();

@@ -59,7 +59,7 @@ apiRouter.post('/block', (req: Request, res: Response): any => {
   const block = new Block({
     index: data.index,
     previousHash: data.previousHash,
-    data: data.data,
+    transactions: data.transactions,
     timestamp: data.timestamp,
     miner: data.miner,
     nonce: data.nonce,
@@ -81,7 +81,7 @@ function isValidBlockPayload(data: any): boolean {
     data.index !== undefined &&
     typeof data.index === 'number' &&
     !isNaN(data.index) &&
-    data.data !== undefined &&
+    Array.isArray(data.transactions) &&
     typeof data.previousHash === 'string' &&
     data.previousHash.length > 0;
 }

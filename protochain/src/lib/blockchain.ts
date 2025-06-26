@@ -1,6 +1,8 @@
 import Block from './block';
 import Validation from './validation';
 import IBlockInfo from './model/block-info.model';
+import Transaction from './transaction';
+import TransactionType from './model/transaction.model';
 
 class Blockchain {
   static readonly DIFFCULTY_FACTOR = 2;
@@ -9,7 +11,16 @@ class Blockchain {
   #nextIndex = 0;
 
   constructor() {
-    this.#chain = [new Block({ index: this.#nextIndex, previousHash: '', data: 'Genesis Block' } as Block)];
+    this.#chain = [new Block({
+      index: this.#nextIndex,
+      previousHash: '',
+      transactions: [
+        new Transaction({
+          type: TransactionType.FEE,
+          data: new Date().toISOString()
+        } as Transaction)
+      ]
+    } as Block)];
     this.#nextIndex++;
   }
 
@@ -37,7 +48,7 @@ class Blockchain {
     const lastBlock = this.getLastBlock();
 
     const blockValidation: Validation = block.isValid(lastBlock.index, lastBlock.hash, this.getDifficulty());
-    
+
     if (blockValidation.success) {
       this.#chain.push(block);
       this.#nextIndex++;
@@ -66,14 +77,16 @@ class Blockchain {
   }
 
   getNextBlock(): IBlockInfo {
-    const data = new Date().toISOString();
+    const transactions = [new Transaction({
+      data: new Date().toISOString(),
+    } as Transaction)];
     const difficulty = this.getDifficulty();
     const previousHash = this.getLastBlock().hash;
     const index = this.#chain.length;
     const feePerTx = this.getFeePerTx();
     const maxDifficulty = Blockchain.MAX_DIFFICULTY;
 
-    return { data, index, previousHash, difficulty, maxDifficulty, feePerTx } as IBlockInfo;
+    return { transactions, index, previousHash, difficulty, maxDifficulty, feePerTx } as IBlockInfo;
   }
 }
 

@@ -1,7 +1,8 @@
 import request from 'supertest';
 import { jest, describe, expect, test } from '@jest/globals';
 
-import { app } from '../src/server/blockchain-server';
+import { app } from '../src/server/blockchain-server.ts';
+import Transaction from '../src/lib/transaction.ts';
 
 jest.mock('../src/lib/block');
 jest.mock('../src/lib/blockchain');
@@ -16,13 +17,13 @@ describe('blochain-server tests', () => {
       isValid: true,
       numberOfBlocks: 1,
       lastBlock: {
-        data: 'Genesis Block',
         hash: 'abcdef1234567890',
         index: 0,
         previousHash: 'abc',
         miner: '',
         nonce: 0,
         timestamp: expect.any(Number),
+        transactions: expect.any(Array),
       },
     };
 
@@ -36,13 +37,13 @@ describe('blochain-server tests', () => {
       .set('Accept', 'application/json');
 
     const expectedBlock = {
-      data: 'Genesis Block',
       hash: 'abcdef1234567890',
       index: 0,
       previousHash: 'abc',
       miner: '',
       nonce: 0,
-      timestamp: expect.any(Number)
+      timestamp: expect.any(Number),
+      transactions: expect.any(Array),
     };
 
     expect(response.status).toBe(200);
@@ -64,13 +65,13 @@ describe('blochain-server tests', () => {
       .set('Accept', 'application/json');
 
     const expectedBlock = {
-      data: 'Genesis Block',
       hash: 'abcdef1234567890',
       index: 0,
       previousHash: 'abc',
       miner: '',
       nonce: 0,
-      timestamp: expect.any(Number)
+      timestamp: expect.any(Number),
+      transactions: expect.any(Array),
     };
 
     expect(response.status).toBe(200);
@@ -87,10 +88,13 @@ describe('blochain-server tests', () => {
   });
 
   test('POST /api/block - should return 201 when the block is added', async () => {
+    const tx = new Transaction({ data: 'Tx' } as Transaction);
+    tx.hash = tx.getHash();
+
     const newBlock = {
       index: 1,
       previousHash: 'abcdef1234567890',
-      data: 'New Block',
+      transactions: [tx]
     };
 
     const response = await request(app)
@@ -108,16 +112,19 @@ describe('blochain-server tests', () => {
   });
 
   test('POST /api/block - should return 422 when previousHash is invalid', async () => {
+    const tx = new Transaction({ data: 'Tx' } as Transaction);
+    tx.hash = tx.getHash();
+
     const newBlock = {
       index: 1,
       previousHash: '',
-      data: 'New Block',
+      transactions: [tx],
     };
 
     const response = await request(app)
       .post('/api/block')
       .send(newBlock);
-    
+
     expect(response.status).toEqual(422);
     expect(response.body).toEqual({ error: 'Unprocessable Content' });
   });
@@ -132,9 +139,12 @@ describe('blochain-server tests', () => {
   });
 
   test('POST /api/block - should return 422 when index is invalid', async () => {
+    const tx = new Transaction({ data: 'Tx' } as Transaction);
+    tx.hash = tx.getHash();
+
     const newBlock = {
       previousHash: 'abcdef1234567890',
-      data: 'New Block',
+      transactions: [tx],
     };
 
     const response = await request(app)
@@ -146,10 +156,13 @@ describe('blochain-server tests', () => {
   });
 
   test('POST /api/block - should return 500 when the block is invalid', async () => {
+    const tx = new Transaction({ data: 'Tx' } as Transaction);
+    tx.hash = tx.getHash();
+
     const newBlock = {
       index: -1,
       previousHash: 'abcdef1234567890',
-      data: 'New Block',
+      transactions: [tx],
     };
 
     const response = await request(app)

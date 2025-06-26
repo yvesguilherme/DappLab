@@ -3,11 +3,13 @@ import { beforeEach, describe, it, expect, jest } from '@jest/globals';
 import Blockchain from '../src/lib/blockchain';
 import Block from '../src/lib/block';
 import Validation from '../src/lib/validation';
+import Transaction from '../src/lib/transaction';
 
 let blockchain: Blockchain;
 let lastHashBlock: string;
 
 jest.mock('../src/lib/block');
+jest.mock('../src/lib/transaction');
 
 beforeEach(() => {
   blockchain = new Blockchain();
@@ -24,13 +26,13 @@ describe('Blockchain tests', () => {
   });
 
   it('should be valid', () => {
-    const block1 = new Block({ index: 1, previousHash: lastHashBlock, data: 'data1' } as Block);
+    const block1 = new Block({ index: 1, previousHash: lastHashBlock, transactions: [new Transaction({ data: 'Tx' } as Transaction)] } as Block);
     blockchain.addBlock(block1);
     expect(blockchain.isValid()).toEqual(true);
   });
 
   it('should add a new valid block to the blockchain', () => {
-    const block = new Block({ index: 1, previousHash: lastHashBlock, data: 'data1' } as Block);
+    const block = new Block({ index: 1, previousHash: lastHashBlock, transactions: [new Transaction({ data: 'Tx' } as Transaction)] } as Block);
 
     expect(blockchain.addBlock(block)).toEqual({ success: true, message: '' });
     expect(blockchain.getChain()).toHaveLength(2);
@@ -38,7 +40,7 @@ describe('Blockchain tests', () => {
   });
 
   it('should not add an invalid block to the blockchain', () => {
-    const block = new Block({ index: 1, previousHash: lastHashBlock, data: '' } as Block);
+    const block = new Block({ index: 1, previousHash: lastHashBlock, transactions: [{}] } as Block);
     jest.spyOn(block, 'isValid').mockReturnValue(Validation.failure('Invalid mock block.'));
 
     expect(blockchain.addBlock(block)).toEqual({ success: false, message: 'Invalid mock block.' });
@@ -51,7 +53,7 @@ describe('Blockchain tests', () => {
   });
 
   it('should return the correct block for a valid index', () => {
-    const block = new Block({ index: 1, previousHash: lastHashBlock, data: 'data1' } as Block);
+    const block = new Block({ index: 1, previousHash: lastHashBlock, transactions: [new Transaction({ data: 'Tx' } as Transaction)] } as Block);
     blockchain.addBlock(block);
 
     expect(blockchain.getBlock(1)).toEqual(block);
@@ -62,19 +64,19 @@ describe('Blockchain tests', () => {
   });
 
   it('should ensure blocks have increasing timestamps', async () => {
-    const block1 = new Block({ index: 1, previousHash: lastHashBlock, data: 'data1' } as Block);
+    const block1 = new Block({ index: 1, previousHash: lastHashBlock, transactions: [new Transaction({ data: 'Tx' } as Transaction)] } as Block);
     blockchain.addBlock(block1);
 
     await new Promise((resolve) => setTimeout(resolve, 5));
 
-    const block2 = new Block({ index: 2, previousHash: block1.hash, data: 'data2' } as Block);
+    const block2 = new Block({ index: 2, previousHash: block1.hash, transactions: [new Transaction({ data: 'Tx' } as Transaction)] } as Block);
     blockchain.addBlock(block2);
 
     expect(block2.timestamp).toBeGreaterThan(block1.timestamp);
   });
 
   it('should return false if a block is invalid', () => {
-    const block1 = new Block({ index: 1, previousHash: lastHashBlock, data: 'data1' } as Block);
+    const block1 = new Block({ index: 1, previousHash: lastHashBlock, transactions: [new Transaction({ data: 'Tx' } as Transaction)] } as Block);
     blockchain.addBlock(block1);
 
     const mockBlock = {
