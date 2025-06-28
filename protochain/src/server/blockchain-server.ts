@@ -5,6 +5,7 @@ import Blockchain from '../lib/blockchain.ts';
 import HttpLog from '../util/http-log.ts';
 import Block from '../lib/block.ts';
 import configEnv from '../config/config-env.ts';
+import Transaction from '../lib/transaction.ts';
 
 const app = express();
 const port = configEnv.BLOCKCHAIN_PORT ?? 3000;
@@ -74,6 +75,34 @@ apiRouter.post('/block', (req: Request, res: Response): any => {
   }
 
   return res.status(201).json(block);
+});
+
+apiRouter.get('/transactions/{*hash}', (req: Request, res: Response) => {
+  if (req.params.hash) { 
+    res.json(blockchain.getTransaction(req.params.hash[0]));
+  } else {
+    res.json({
+      next: blockchain.mempool.slice(0, Blockchain.TX_PER_BLOCK),
+      total: blockchain.mempool.length,
+    });
+  }
+});
+
+apiRouter.post('/transactions', (req: Request, res: Response): any => { 
+  if (req.body.hash === undefined) {
+    return res
+      .status(422)
+      .json({ error: 'Unprocessable Entity' });
+  }
+
+  const tx = new Transaction(req.body as Transaction);
+  const validation = blockchain.addTransaction(tx);
+
+  if (validation.success) {
+    res.status(201).json(tx);
+  } else {
+    res.status(400).json(validation);
+  }
 });
 
 function isValidBlockPayload(data: any): boolean {

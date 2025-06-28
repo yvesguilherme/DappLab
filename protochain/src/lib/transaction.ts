@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 
-import TransactionType from "./model/transaction.model";
-import Validation from './validation';
+import TransactionType from "./model/transaction.model.ts";
+import Validation from './validation.ts';
 
 /**
  * Transaction class represents a transaction in the blockchain.
@@ -15,8 +15,8 @@ class Transaction {
   constructor(tx?: Transaction) {
     this.type = tx?.type ?? TransactionType.REGULAR;
     this.timestamp = tx?.timestamp ?? Date.now();
-    this.hash = tx?.hash ?? "";
-    this.data = tx?.data ?? this.getHash();
+    this.data = tx?.data ?? '';
+    this.hash = tx?.hash?.length ? tx.hash : this.getHash();
   }
 
   getHash(): string {
