@@ -32,7 +32,11 @@ describe('Blockchain tests', () => {
   });
 
   it('should add a new valid block to the blockchain', () => {
-    const block = new Block({ index: 1, previousHash: lastHashBlock, transactions: [new Transaction({ data: 'Tx' } as Transaction)] } as Block);
+    const tx = new Transaction({ data: 'tx1' } as Transaction);
+
+    blockchain.mempool.push(tx);
+
+    const block = new Block({ index: 1, previousHash: lastHashBlock, transactions: [tx] } as Block);
 
     expect(blockchain.addBlock(block)).toEqual({ success: true, message: '' });
     expect(blockchain.getChain()).toHaveLength(2);
@@ -53,7 +57,11 @@ describe('Blockchain tests', () => {
   });
 
   it('should return the correct block for a valid index', () => {
-    const block = new Block({ index: 1, previousHash: lastHashBlock, transactions: [new Transaction({ data: 'Tx' } as Transaction)] } as Block);
+    const tx = new Transaction({ data: 'tx1' } as Transaction);
+
+    blockchain.mempool.push(tx);
+
+    const block = new Block({ index: 1, previousHash: lastHashBlock, transactions: [tx] } as Block);
     blockchain.addBlock(block);
 
     expect(blockchain.getBlock(1)).toEqual(block);
@@ -91,8 +99,70 @@ describe('Blockchain tests', () => {
   });
 
   it('should get next block info', () => {
+    blockchain.mempool.push(new Transaction({ data: 'Tx' } as Transaction));
     const info = blockchain.getNextBlock();
-    expect(info.index).toEqual(1);
+    expect(info ? info.index : 0).toEqual(1);
+  });
 
+  it('should not get next block info', () => {
+    blockchain.addTransaction(new Transaction({ data: 'Tx' } as Transaction));
+    const info = blockchain.getNextBlock();
+    expect(info).toBeNull();
+  });
+
+  it('should add transaction', () => {
+    const tx = new Transaction({ data: 'tx1', hash: 'xyz' } as Transaction);
+    const validation = blockchain.addTransaction(tx);    
+
+    expect(validation.success).toBe(true);
+  });
+
+  it('should not add transaction (invalid tx)', () => {
+    const tx = new Transaction({ data: '', hash: 'xyz' } as Transaction);
+    const validation = blockchain.addTransaction(tx);
+
+    expect(validation.success).toBe(false);
+  });
+
+  it('should not add transaction (duplicated in blockchain)', () => {
+    const tx = new Transaction({ data: '123', hash: 'xyz' } as Transaction);
+
+    blockchain.getChain().push(new Block({ transactions: [tx] } as Block));
+
+    const validation = blockchain.addTransaction(tx);
+
+    expect(validation.success).toBe(false);
+  });
+
+  it('should not add transaction (duplicated in mempool)', () => {
+    const tx = new Transaction({ data: '123', hash: 'xyz' } as Transaction);
+
+    blockchain.mempool.push(tx);
+
+    const validation = blockchain.addTransaction(tx);
+
+    expect(validation.success).toBe(false);
+  });
+
+  it('should get transaction (mempool)', () => {
+    const tx = new Transaction({ data: 'tx1', hash: 'abc' } as Transaction);
+    blockchain.mempool.push(tx);
+
+    const result = blockchain.getTransaction('abc');
+    expect(result.mempoolIndex).toEqual(0);
+  });
+
+  it('should get transaction (blockchain)', () => {
+    const tx = new Transaction({ data: 'tx1', hash: 'XYZ' } as Transaction);
+
+    blockchain.getChain().push(new Block({transactions: [tx]} as Block));
+
+    const result = blockchain.getTransaction('XYZ');
+    expect(result.blockIndex).toEqual(1);
+  });
+
+  it('should not get transaction (not found)', () => {
+    const result = blockchain.getTransaction('notfound');
+    expect(result).toEqual({ mempoolIndex: -1, blockIndex: -1 });
   });
 });

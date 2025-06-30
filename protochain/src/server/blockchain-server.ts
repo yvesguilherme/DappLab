@@ -21,7 +21,8 @@ const apiRouter = express.Router();
 
 apiRouter.get('/status', (req: Request, res: Response) => {
   const status = {
-    numberOfBlocks: blockchain.getChain().length,
+    mempool: blockchain.mempool.length,
+    blocks: blockchain.getChain().length,
     isValid: blockchain.isValid(),
     lastBlock: blockchain.getLastBlock(),
   };

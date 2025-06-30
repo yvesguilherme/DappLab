@@ -3,6 +3,7 @@ import Block from '../block.ts';
 import Validation from '../validation.ts';
 import Transaction from '../transaction.ts';
 import TransactionType from '../model/transaction.model.ts';
+import TransactionSearch from '../model/transaction-search.model.ts';
 
 /**
  * Mock Blockchain class for testing purposes.
@@ -11,6 +12,7 @@ class Blockchain {
   static readonly MAX_DIFFICULTY = 62;
   readonly #chain: Block[];
   #nextIndex = 0;
+  mempool: Transaction[];
 
   /**
    * Creates a new instance of the mock Blockchain class.
@@ -22,6 +24,7 @@ class Blockchain {
       previousHash: 'abc', 
       transactions: [new Transaction({ data: 'tx1', type: TransactionType.FEE } as Transaction)]
     } as Block)];
+    this.mempool = [];
     this.#nextIndex++;
   }
 
@@ -58,6 +61,27 @@ class Blockchain {
 
   getFeePerTx(): number {
     return 1;
+  }
+  
+  addTransaction(transaction: Transaction): Validation {
+    const validation = transaction.isValid();
+
+    if (!validation.success) { 
+      return validation;
+    }
+
+    this.mempool.push(transaction);
+
+    return Validation.success();
+  }
+
+  getTransaction(hash: string): TransactionSearch {
+    return {
+      mempoolIndex: 0,
+      transaction: {
+        hash
+      }
+    } as TransactionSearch;
   }
 
   getNextBlock(): IBlockInfo {

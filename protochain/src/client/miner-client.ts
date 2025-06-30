@@ -16,6 +16,12 @@ async function mineBlock() {
   log.info('Getting next block info...');
 
   const { data } = await axios.get(`${BLOCKCHAIN_API_URL}/block/next`);
+
+  if (!data) {
+    log.warn('No tx found. Retrying in 5 seconds...');
+    return setTimeout(() => mineBlock(), 5000);
+  }
+
   const blockInfo = data as BlockInfo;
 
   const newBlock = Block.fromBlockInfoToBlock(blockInfo);

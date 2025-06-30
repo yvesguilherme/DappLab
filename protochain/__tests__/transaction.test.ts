@@ -43,10 +43,10 @@ describe('Transaction Tests', () => {
     expect(validation.message).toBe('Invalid data.');
   });
 
-  test('should set data to hash if data is not provided', () => {
+  test('should set hash if hash is not provided', () => {
     const tx = new Transaction();
 
-    expect(typeof tx.data).toBe('string');
-    expect(tx.data).toMatch(/^[a-f0-9]{64}$/);
+    expect(typeof tx.hash).toBe('string');
+    expect(tx.hash).toMatch(/^[a-f0-9]{64}$/);
   });
 });

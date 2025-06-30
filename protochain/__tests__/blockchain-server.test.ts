@@ -15,7 +15,8 @@ describe('blochain-server tests', () => {
 
     const expectedStatus = {
       isValid: true,
-      numberOfBlocks: 1,
+      mempool: 0,
+      blocks: 1,
       lastBlock: {
         hash: 'abcdef1234567890',
         index: 0,
@@ -31,7 +32,7 @@ describe('blochain-server tests', () => {
     expect(response.body).toEqual(expectedStatus);
   });
 
-  test('GET /api/:index - should return genesis', async () => {
+  test('GET /api/block/:index - should return genesis', async () => {
     const response = await request(app)
       .get('/api/block/0')
       .set('Accept', 'application/json');
@@ -50,7 +51,7 @@ describe('blochain-server tests', () => {
     expect(response.body).toEqual(expectedBlock);
   });
 
-  test('GET /api/next - should get next block info', async () => {
+  test('GET /api/block/next - should get next block info', async () => {
     const response = await request(app)
       .get('/api/block/next')
       .set('Accept', 'application/json');
@@ -59,7 +60,7 @@ describe('blochain-server tests', () => {
     expect(response.body.index).toEqual(1);
   });
 
-  test('GET /api/:hash - should return genesis', async () => {
+  test('GET /api/block/:hash - should return genesis', async () => {
     const response = await request(app)
       .get('/api/block/abcdef1234567890')
       .set('Accept', 'application/json');
@@ -78,7 +79,7 @@ describe('blochain-server tests', () => {
     expect(response.body).toEqual(expectedBlock);
   });
 
-  test('GET /api/:indexOrHash - should return "Block not found" when the block doesnt exist', async () => {
+  test('GET /api/block/:indexOrHash - should return "Block not found" when the block doesnt exist', async () => {
     const response = await request(app)
       .get('/api/block/-1')
       .set('Accept', 'application/json');
@@ -223,5 +224,55 @@ describe('blochain-server tests', () => {
 
     // Clear the argument to avoid affecting other tests
     process.argv = process.argv.filter(arg => arg !== '--r');
+  });
+
+  test('GET /api/transactions/:hash - should return transaction by hash', async () => {
+    const response = await request(app)
+      .get('/api/transactions/abc')
+      .set('Accept', 'application/json');
+    
+    expect(response.status).toBe(200);
+    expect(response.body.mempoolIndex).toEqual(0);
+  });
+
+  test('GET /api/transactions - should return transactions', async () => {
+    const response = await request(app)
+      .get('/api/transactions/')
+      .set('Accept', 'application/json');
+    
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ next: [], total: 0 });
+  });
+
+  test('POST /api/transactions - should add transaction', async () => {
+    const tx = new Transaction({ data: 'tx1' } as Transaction);
+
+    const response = await request(app)
+      .post('/api/transactions')
+      .send(tx);
+
+    expect(response.status).toEqual(201);
+  });
+
+  test('POST /api/transactions - should return unprocessable entity', async () => {
+    const tx = {};
+
+    const response = await request(app)
+      .post('/api/transactions')
+      .send(tx);
+
+    expect(response.status).toEqual(422);
+    expect(response.body).toEqual({ error: 'Unprocessable Entity' });
+  });
+
+  test('POST /api/transactions - should return http 400', async () => {
+    const tx = new Transaction({ data: '' } as Transaction);
+
+    const response = await request(app)
+      .post('/api/transactions')
+      .send(tx);
+
+    expect(response.status).toEqual(400);
+    expect(response.body).toEqual({ message: 'Invalid data.', success: false });
   });
 });

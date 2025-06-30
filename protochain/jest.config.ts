@@ -35,6 +35,7 @@ const config: Config = {
   coveragePathIgnorePatterns: [
     "/node_modules/",
     "<rootDir>/src/lib/model/block-info.model.ts", // Exclude specific file from tests
+    "<rootDir>/src/lib/model/transaction-search.model.ts",
   ],
 
   // Indicates which provider should be used to instrument code for coverage
