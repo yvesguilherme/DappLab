@@ -7,8 +7,8 @@ const ECPair = ECPairFactory(ecc);
  * Wallet class for managing cryptocurrency wallets.
  */
 class Wallet {
-  privateKey: string;
-  publicKey: string;
+  privateKey: string; // To sign
+  publicKey: string;  // To verify
 
   constructor(wifOrPrivateKey?: string) {
     let keys;
