@@ -1,17 +1,9 @@
-import { createHash } from 'crypto';
-
 import { BigNumberish } from 'ethers';
-import * as ecc from 'tiny-secp256k1';
-import ECPairFactory from 'ecpair';
 
-import Validation from './validation.ts';
-
-const ECPair = ECPairFactory(ecc);
+import Validation from '../validation';
 
 /**
- * TransactionInput represents the input for a transaction.
- * It includes the address of the sender, the amount to be transferred,
- * and the signature of the transaction.
+ * Mock class for TransactionInput.
  */
 class TransactionInput {
   fromAddress: string; // Public key of the sender
@@ -23,9 +15,9 @@ class TransactionInput {
    * @param txInput Optional TransactionInput object to initialize the instance.
    */
   constructor(txInput?: TransactionInput) {
-    this.fromAddress = txInput?.fromAddress ?? '';
-    this.amount = txInput?.amount ?? '0';
-    this.signature = txInput?.signature ?? '';
+    this.fromAddress = txInput?.fromAddress ?? 'wallet1';
+    this.amount = txInput?.amount ?? '10';
+    this.signature = txInput?.signature ?? 'abc';
   }
 
   /**
@@ -34,11 +26,7 @@ class TransactionInput {
    * @param privateKey The private key corresponding to the 'fromAddress' (sender's public key).
    */
   sign(privateKey: string): void {
-    const signature = ECPair
-      .fromPrivateKey(Buffer.from(privateKey, 'hex'))
-      .sign(Buffer.from(this.getHash(), 'hex'));
-
-    this.signature = Buffer.from(signature).toString('hex');
+    this.signature = 'abc';
   }
 
   /**
@@ -47,9 +35,7 @@ class TransactionInput {
    * @returns A SHA-256 hash of the transaction input.
    */
   getHash(): string {
-    return createHash('sha256')
-      .update(`${this.fromAddress}${this.amount}`)
-      .digest('hex');
+    return 'abc';
   }
 
   /**
@@ -67,14 +53,7 @@ class TransactionInput {
       return Validation.failure('Amount must be greater than zero.');
     }
 
-    const hash = Buffer.from(this.getHash(), 'hex');
-    const isValidSignature = ECPair
-      .fromPublicKey(Buffer.from(this.fromAddress, 'hex'))
-      .verify(hash, Buffer.from(this.signature, 'hex'));
-    
-    return isValidSignature
-      ? Validation.success()
-      : Validation.failure('Invalid tx input signature.');
+    return Validation.success();
   }
 }
 

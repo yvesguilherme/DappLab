@@ -32,6 +32,14 @@ class Transaction {
     if (this.hash !== this.getHash()) return Validation.failure('Invalid hash.');
 
     if (!this.to) return Validation.failure('Invalid to.');
+
+    if (this.txInput) {
+      const validation = this.txInput.isValid();
+
+      if (!validation.success) {
+        return Validation.failure(`Invalid tx: ${validation.message}`);
+      }
+    }
     
     return Validation.success();
   }

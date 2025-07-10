@@ -23,14 +23,13 @@ class Wallet {
           keys = ECPair.fromWIF(wifOrPrivateKey);
         }
       } catch (error) {
-        const message = (error instanceof Error) ? error.message : error;
-        throw new Error(`Invalid WIF or private key: ${message}`);
+        throw new Error(`Invalid WIF or private key: ${error}`);
       }
     } else {
       keys = ECPair.makeRandom();
     }
 
-    this.privateKey = keys.privateKey ? Buffer.from(keys.privateKey).toString('hex') : '';
+    this.privateKey = Buffer.from(keys.privateKey!).toString('hex');
     this.publicKey = Buffer.from(keys.publicKey).toString('hex');
   }
 }

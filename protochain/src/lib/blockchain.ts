@@ -4,6 +4,7 @@ import IBlockInfo from './model/block-info.model.ts';
 import Transaction from './transaction.ts';
 import TransactionType from './model/transaction.model.ts';
 import TransactionSearch from './model/transaction-search.model.ts';
+import TransactionInput from './transaction-input.ts';
 
 class Blockchain {
   static readonly DIFFCULTY_FACTOR = 2;
@@ -20,7 +21,7 @@ class Blockchain {
       transactions: [
         new Transaction({
           type: TransactionType.FEE,
-          data: new Date().toISOString()
+          txInput: new TransactionInput(),
         } as Transaction)
       ]
     } as Block)];
