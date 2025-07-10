@@ -4,6 +4,8 @@ import axios from 'axios';
 
 import configEnv from "../config/config-env.ts";
 import Wallet from "../lib/wallet.ts";
+import Transaction from '../lib/transaction.ts';
+import TransactionInput from '../lib/transaction-input.ts';
 
 const BLOCKCHAIN_SERVER = configEnv.BLOCKCHAIN_SERVER;
 let myWalletPub = '';
@@ -75,7 +77,7 @@ function createWallet() {
   preMenu();
 }
 
-function recoverWallet() { 
+function recoverWallet() {
   console.clear();
 
   rl.question(`What's your private key or WIF? `, (privateKeyOrWif) => {
@@ -95,24 +97,61 @@ function getBalance() {
 
   if (!myWalletPub) {
     console.log(`You need to create or recover a wallet first.`);
-    preMenu();
-    return;
+    return preMenu();
   }
 
   // TODO: Get balance from the blockchain server
   preMenu();
- }
+}
 
-function sendTransaction() { 
+function sendTransaction() {
   console.clear();
 
   if (!myWalletPub) {
     console.log(`You need to create or recover a wallet first.`);
-    preMenu();
-    return;
+    return preMenu();
   }
 
-  // TODO: Send tx from the blockchain server
+  console.log(`Your wallet is: ${myWalletPub}`);
+
+  rl.question('Enter the recipient address: ', (recipient) => {
+    if (recipient.length < 64) {
+      console.log('Invalid recipient address. It should be a 64-character hex string.');
+      return preMenu();
+    }
+
+    rl.question('Enter the amount to send: ', async (amount) => {
+      const amountNum = parseFloat(amount);
+      if (isNaN(amountNum) || amountNum <= 0) {
+        console.log('Invalid amount. Please enter a positive number.');
+        return preMenu();
+      }
+
+      // TODO: balance validation
+
+      const tx = new Transaction({
+        to: recipient,
+        txInput: new TransactionInput({
+          amount: amountNum,
+          fromAddress: myWalletPub
+        } as TransactionInput)
+      } as Transaction);
+
+      tx.txInput.sign(myWalletPriv);
+      tx.hash = tx.getHash();
+
+      try {
+        const txResponse = await axios.post(`${BLOCKCHAIN_SERVER}/transactions`, tx);
+
+        console.log('Transaction sent successfully. Waiting the miners!');
+        console.log(txResponse.data.hash);
+      } catch (error: any) {
+        console.error(error.response ? error.response.data : error.message);
+      }
+
+      return preMenu();
+    });
+  });
   preMenu();
 }
 

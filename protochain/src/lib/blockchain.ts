@@ -50,6 +50,17 @@ class Blockchain {
   }
 
   addTransaction(transaction: Transaction): Validation {
+    if (transaction.txInput) {
+      const fromAddress = transaction.txInput.fromAddress;
+      const pendingTx = this.mempool.find(tx => tx.txInput?.fromAddress === fromAddress);
+
+      if (pendingTx) {
+        return new Validation(false, `This wallet has a pending transaction`);
+      }
+
+      // TODO: validate the source funds
+    }
+
     const validation = transaction.isValid();
 
     if (!validation.success) {

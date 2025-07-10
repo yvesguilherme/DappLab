@@ -7,7 +7,7 @@
     "dev": "NODE_NO_WARNINGS=1 npx nodemon --watch src --exec node --import ./loader.js src/lib/blockchain.ts -e ts",
     "blockchain": "NODE_NO_WARNINGS=1 node --env-file=.env --import ./loader.js src/server/blockchain-server.ts --r",
     "miner": "NODE_NO_WARNINGS=1 node --env-file=.env --import ./loader.js src/client/miner-client.ts --r",
-    "wallet": "NODE_NO_WARNINGS=1 npx nodemon --watch src --exec node --import ./loader.js src/client/wallet-client.ts -e ts",
+    "wallet": "NODE_NO_WARNINGS=1 npx nodemon --watch src --exec node --env-file=.env --import ./loader.js src/client/wallet-client.ts -e ts",
     "start": "node dist/blockchain.js",
     "test": "jest --no-cache"
   },
