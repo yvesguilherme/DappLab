@@ -11,20 +11,21 @@ class Transaction {
   type: TransactionType;
   timestamp: number;
   hash: string;
-  txInput: TransactionInput;
+  txInput: TransactionInput | undefined;
   to: string;
 
   constructor(tx?: Transaction) {
     this.type = tx?.type ?? TransactionType.REGULAR;
     this.timestamp = tx?.timestamp ?? Date.now();
     this.to = tx?.to ?? '';
-    this.txInput = tx?.txInput ? new TransactionInput(tx.txInput) : new TransactionInput();
+    this.txInput = tx?.txInput ? new TransactionInput(tx.txInput) : undefined;
     this.hash = tx?.hash?.length ? tx.hash : this.getHash();
   }
 
   getHash(): string {
+    const from = this.txInput ? this.txInput.getHash() : '';
     return createHash('sha256')
-      .update(`${this.type}${this.txInput.getHash()}${this.to}${this.timestamp}`)
+      .update(`${this.type}${from}${this.to}${this.timestamp}`)
       .digest('hex');
   }
 

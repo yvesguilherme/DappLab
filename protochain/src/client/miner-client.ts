@@ -4,12 +4,15 @@ import log from '../util/log.ts';
 import BlockInfo from '../lib/model/block-info.model.ts';
 import Block from '../lib/block.ts';
 import configEnv from '../config/config-env.ts';
+import Wallet from '../lib/wallet.ts';
+import Transaction from '../lib/transaction.ts';
+import TransactionType from '../lib/model/transaction.model.ts';
 
 const BLOCKCHAIN_API_URL = configEnv.BLOCKCHAIN_SERVER ?? 'http://localhost:3000/api';
-const minerWallet = {
-  privatekey: 'yvesPK',
-  publickey: configEnv.MINER_WALLET ?? 'yvesPB',
-};
+
+const minerWallet = new Wallet(process.env.MINER_WALLET);
+log.info(`Logged as: ${minerWallet.publicKey}`);
+
 let totalMinedBlocks = 0;
 
 async function mineBlock() {
@@ -26,11 +29,19 @@ async function mineBlock() {
 
   const newBlock = Block.fromBlockInfoToBlock(blockInfo);
 
-  //TODO: adicionar tx de recompensa
+  newBlock.transactions.push(
+    new Transaction({
+      to: minerWallet.publicKey,
+      type: TransactionType.FEE
+    } as Transaction)
+  );
+
+  newBlock.miner = minerWallet.publicKey;
+  newBlock.hash = newBlock.getHash();
 
   log.info(`Mining block #${blockInfo.index}...`);
 
-  newBlock.mine(blockInfo.difficulty, minerWallet.publickey);
+  newBlock.mine(blockInfo.difficulty, minerWallet.publicKey);
 
   log.info(`Block mined! Sending block #${newBlock.index} to the blockchain...`);
 

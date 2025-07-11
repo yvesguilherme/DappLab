@@ -73,11 +73,15 @@ class Block {
    */
   isValid(previousIndex: number, previousHash: string, difficulty: number): Validation {
     if (this.transactions.length) {
-      const manyTxFee = this.transactions.filter(tx => tx.type === TransactionType.FEE).length > 1;
+      const manyTxFee = this.transactions.filter(tx => tx.type === TransactionType.FEE);
       const validations = this.transactions.map(tx => tx.isValid());
       const errors = validations.filter(validation => !validation.success).map(validation => validation.message);
 
-      if (manyTxFee) return Validation.failure('Too many fee transactions in block.');
+      if (!manyTxFee.length) return Validation.failure('No fee tx.');
+
+      if (manyTxFee.length > 1) return Validation.failure('Too many fee transactions in block.');
+
+      if (manyTxFee[0].to !== this.miner) return Validation.failure('Invalid fee tx: different from miner.');
 
       if (errors.length) return Validation.failure('Invalid block due to invalid tx: ' + errors.join(', '));
     }

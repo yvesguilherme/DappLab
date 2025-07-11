@@ -87,7 +87,7 @@ class Blockchain {
 
   getNextBlock(): IBlockInfo {
     const transactions = [new Transaction({ txInput: new TransactionInput() } as Transaction)];
-    const difficulty = 0;
+    const difficulty = 1;
     const previousHash = this.getLastBlock().hash;
     const index = 1;
     const feePerTx = this.getFeePerTx();

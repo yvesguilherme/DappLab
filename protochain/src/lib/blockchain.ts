@@ -46,7 +46,7 @@ class Blockchain {
   }
 
   getDifficulty(): number {
-    return Math.ceil(this.#chain.length / Blockchain.DIFFCULTY_FACTOR);
+    return Math.ceil(this.#chain.length / Blockchain.DIFFCULTY_FACTOR) + 1;
   }
 
   addTransaction(transaction: Transaction): Validation {

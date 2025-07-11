@@ -13,10 +13,15 @@ jest.mock('../src/lib/transaction-input');
 describe('Block tests', () => {
   let genesisBlock: Block;
   let block: Block;
-  const difficulty = 0;
+  const difficulty = 1;
+  const exampleMiner = 'miner';
 
   beforeEach(() => {
-    const tx = new Transaction({ txInput: new TransactionInput() } as Transaction);
+    const tx = new Transaction({
+      type: TransactionType.FEE,
+      to: exampleMiner,
+      txInput: new TransactionInput()
+    } as Transaction);
     tx.hash = tx.getHash();
 
     genesisBlock = new Block({
@@ -24,51 +29,74 @@ describe('Block tests', () => {
       previousHash: '',
       transactions: [tx],
       nonce: 1,
-      miner: 'miner'
+      miner: exampleMiner
     } as Block);
     jest.clearAllMocks();
   });
 
-  it('should be valid for the genesis block (index === 0)', () => {
-    genesisBlock.mine(0, 'miner');
-    expect(genesisBlock).toBeDefined();
-    expect(genesisBlock.isValid(-1, '', difficulty)).toEqual(Validation.success());
-    expect(genesisBlock.previousHash.length).toEqual(0);
-    expect(genesisBlock.transactions.length).toBeGreaterThan(0);
-  });
-
-  it('should be valid', () => {
-    const tx = new Transaction({ txInput: new TransactionInput() } as Transaction);
-    tx.hash = tx.getHash();
-
-    block = new Block({
-      index: 1,
-      previousHash: genesisBlock.hash,
-      transactions: [tx]
-    } as Block);
-    block.mine(0, 'miner');
-    expect(block).toBeDefined();
-    expect(block.isValid(genesisBlock.index, genesisBlock.hash, difficulty)).toEqual(Validation.success());
-  });
-
   it('should be invalid genesis block (previous hash)', () => {
-    const tx = new Transaction({ txInput: new TransactionInput() } as Transaction);
+    const tx = new Transaction({
+      type: TransactionType.FEE,
+      to: exampleMiner,
+      txInput: new TransactionInput()
+    } as Transaction);
     tx.hash = tx.getHash();
 
     block = new Block({
       index: 0,
+      miner: exampleMiner,
       previousHash: 'invalid',
       transactions: [tx]
     } as Block);
     expect(block.isValid(-1, '', difficulty)).toEqual(Validation.failure('Invalid previous hash.'));
   });
 
+  it('should be invalid (no fee tx)', () => {
+    const tx = new Transaction({
+      to: exampleMiner,
+      txInput: new TransactionInput()
+    } as Transaction);
+    tx.hash = tx.getHash();
+
+    block = new Block({
+      index: 0,
+      miner: exampleMiner,
+      previousHash: genesisBlock.hash,
+      transactions: [tx]
+    } as Block);
+
+    expect(block.isValid(-1, '', difficulty)).toEqual(Validation.failure('No fee tx.'));
+  });
+
+  it('should be invalid (different from miner)', () => {
+    const tx = new Transaction({
+      to: exampleMiner,
+      type: TransactionType.FEE,
+      txInput: new TransactionInput()
+    } as Transaction);
+    tx.hash = tx.getHash();
+
+    block = new Block({
+      index: 0,
+      miner: 'differentMiner',
+      previousHash: genesisBlock.hash,
+      transactions: [tx]
+    } as Block);
+
+    expect(block.isValid(-1, '', difficulty)).toEqual(Validation.failure('Invalid fee tx: different from miner.'));
+  });
+
   it('should be invalid (timestamp)', () => {
-    const tx = new Transaction({ txInput: new TransactionInput() } as Transaction);
+    const tx = new Transaction({
+      to: exampleMiner,
+      type: TransactionType.FEE,
+      txInput: new TransactionInput()
+    } as Transaction);
     tx.hash = tx.getHash();
 
     block = new Block({
       index: 1,
+      miner: exampleMiner,
       previousHash: genesisBlock.hash,
       transactions: [tx],
       timestamp: - 1
@@ -77,11 +105,16 @@ describe('Block tests', () => {
   });
 
   it('should be invalid (index)', () => {
-    const tx = new Transaction({ txInput: new TransactionInput() } as Transaction);
+    const tx = new Transaction({
+      to: exampleMiner,
+      type: TransactionType.FEE,
+      txInput: new TransactionInput()
+    } as Transaction);
     tx.hash = tx.getHash();
 
     block = new Block({
       index: -1,
+      miner: exampleMiner,
       previousHash: genesisBlock.hash,
       transactions: [tx]
     } as Block);
@@ -89,11 +122,16 @@ describe('Block tests', () => {
   });
 
   it('should be invalid (previous index)', () => {
-    const tx = new Transaction({ txInput: new TransactionInput() } as Transaction);
+    const tx = new Transaction({
+      to: exampleMiner,
+      type: TransactionType.FEE,
+      txInput: new TransactionInput()
+    } as Transaction);
     tx.hash = tx.getHash();
 
     block = new Block({
       index: -1,
+      miner: exampleMiner,
       previousHash: genesisBlock.hash,
       transactions: [tx]
     } as Block);
@@ -101,20 +139,30 @@ describe('Block tests', () => {
   });
 
   it('should fail validation if the previous hash is invalid', () => {
-    const tx = new Transaction({ txInput: new TransactionInput() } as Transaction);
+    const tx = new Transaction({
+      to: exampleMiner,
+      type: TransactionType.FEE,
+      txInput: new TransactionInput()
+    } as Transaction);
     tx.hash = tx.getHash();
 
     const previousBlock = new Block({
       index: 0,
       previousHash: '',
+      miner: exampleMiner,
       transactions: [tx]
     } as Block);
 
-    const tx2 = new Transaction({ txInput: new TransactionInput() } as Transaction);
+    const tx2 = new Transaction({
+      to: exampleMiner,
+      type: TransactionType.FEE,
+      txInput: new TransactionInput()
+    } as Transaction);
     tx2.hash = tx2.getHash();
 
     const block = new Block({
       index: 1,
+      miner: exampleMiner,
       previousHash: 'invalidPreviousHash',
       transactions: [tx2]
     } as Block);
@@ -124,16 +172,25 @@ describe('Block tests', () => {
   });
 
   it('should return "no mined" if nonce or miner is invalid', () => {
-    const tx = new Transaction({ txInput: new TransactionInput() } as Transaction);
+    const tx = new Transaction({
+      to: exampleMiner,
+      type: TransactionType.FEE,
+      txInput: new TransactionInput()
+    } as Transaction);
     tx.hash = tx.getHash();
 
     const previousBlock = new Block({
       index: 0,
       previousHash: '',
+      miner: exampleMiner,
       transactions: [tx]
     } as Block);
 
-    const tx2 = new Transaction({ txInput: new TransactionInput() } as Transaction);
+    const tx2 = new Transaction({
+      to: exampleMiner,
+      type: TransactionType.FEE,
+      txInput: new TransactionInput()
+    } as Transaction);
     tx2.hash = tx2.getHash();
 
     const block = new Block({
@@ -141,7 +198,7 @@ describe('Block tests', () => {
       previousHash: previousBlock.hash,
       transactions: [tx2],
       nonce: 0,
-      miner: ''
+      miner: exampleMiner
     } as Block);
 
     const validation = block.isValid(previousBlock.index, previousBlock.hash, difficulty);
@@ -149,16 +206,25 @@ describe('Block tests', () => {
   });
 
   it('should return Invalid hash if the hash is invalid', () => {
-    const tx = new Transaction({ txInput: new TransactionInput() } as Transaction);
+    const tx = new Transaction({
+      to: exampleMiner,
+      type: TransactionType.FEE,
+      txInput: new TransactionInput()
+    } as Transaction);
     tx.hash = tx.getHash();
 
     const previousBlock = new Block({
       index: 0,
       previousHash: '',
+      miner: exampleMiner,
       transactions: [tx]
     } as Block);
 
-    const tx2 = new Transaction({ txInput: new TransactionInput() } as Transaction);
+    const tx2 = new Transaction({
+      txInput: new TransactionInput(),
+      type: TransactionType.FEE,
+      to: exampleMiner
+    } as Transaction);
     tx2.hash = tx2.getHash();
 
     const block = new Block({
@@ -166,7 +232,7 @@ describe('Block tests', () => {
       previousHash: previousBlock.hash,
       transactions: [tx2],
       nonce: 1,
-      miner: 'miner'
+      miner: exampleMiner
     } as Block);
 
     block.hash = 'invalidHash';
@@ -205,7 +271,11 @@ describe('Block tests', () => {
   });
 
   it('should create from block info', () => {
-    const tx = new Transaction({ txInput: new TransactionInput() } as Transaction);
+    const tx = new Transaction({
+      to: exampleMiner,
+      type: TransactionType.FEE,
+      txInput: new TransactionInput()
+    } as Transaction);
     tx.hash = tx.getHash();
 
     const block = Block.fromBlockInfoToBlock({
@@ -217,7 +287,7 @@ describe('Block tests', () => {
       maxDifficulty: 62
     } as BlockInfo);
 
-    block.mine(difficulty, 'miner');
+    block.mine(difficulty, exampleMiner);
 
     const valid = block.isValid(genesisBlock.index, genesisBlock.hash, difficulty);
     expect(valid).toEqual(Validation.success());
@@ -238,7 +308,7 @@ describe('Block tests', () => {
       previousHash: genesisBlock.hash,
       transactions: [tx1, tx2],
       nonce: 1,
-      miner: 'miner'
+      miner: exampleMiner
     } as Block);
 
     const validation = block.isValid(genesisBlock.index, genesisBlock.hash, difficulty);
@@ -247,19 +317,46 @@ describe('Block tests', () => {
     expect(validation.message).toBe('Too many fee transactions in block.');
   });
 
-  it('should fail validation if there are invalid transactions in the block', () => {
+  it('should fail validation if there are too many transactions in the block', () => {
     const txInput = new TransactionInput();
     txInput.amount = -1;
 
-    const tx1 = new Transaction({ txInput } as Transaction);
-    const tx2 = new Transaction({ txInput } as Transaction);
+    const tx1 = new Transaction({ to: exampleMiner, type: TransactionType.FEE, txInput } as Transaction);
+    const tx2 = new Transaction({ to: exampleMiner, type: TransactionType.FEE, txInput } as Transaction);
 
     block = new Block({
       index: 1,
       previousHash: genesisBlock.hash,
       transactions: [tx1, tx2],
       nonce: 1,
-      miner: 'miner'
+      miner: exampleMiner
+    } as Block);
+
+    const validation = block.isValid(genesisBlock.index, genesisBlock.hash, difficulty);
+
+    expect(validation.success).toBe(false);
+    expect(validation.message).toBe(`Too many fee transactions in block.`);
+  });
+
+  it('should fail validation if there are invalid transactions in the block', () => {
+    const txInput = new TransactionInput();
+    txInput.amount = -1;
+
+    const tx1 = new Transaction({
+      to: exampleMiner,
+      type: TransactionType.FEE,
+      txInput
+    } as Transaction);
+
+    const tx2 = new Transaction({ to: exampleMiner, type: TransactionType.REGULAR, txInput } as Transaction);
+    tx2.hash = 'invalidHash2';
+
+    block = new Block({
+      index: 1,
+      previousHash: genesisBlock.hash,
+      transactions: [tx1, tx2],
+      nonce: 1,
+      miner: exampleMiner
     } as Block);
 
     const validation = block.isValid(genesisBlock.index, genesisBlock.hash, difficulty);
