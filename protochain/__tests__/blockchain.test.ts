@@ -116,7 +116,7 @@ describe('Blockchain tests', () => {
     const tx = new Transaction({ txInput: new TransactionInput() } as Transaction);
     tx.hash = '123321';
 
-    const validation = blockchain.addTransaction(tx); 
+    const validation = blockchain.addTransaction(tx);
 
     expect(validation.success).toBeTruthy();
   });
@@ -129,6 +129,16 @@ describe('Blockchain tests', () => {
     const validation = blockchain.addTransaction(tx);
 
     expect(validation.success).toBe(false);
+  });
+
+  it('should not add transaction (pending tx)', () => {
+    const tx = new Transaction({ txInput: new TransactionInput(), hash: 'xyz' } as Transaction);
+    blockchain.addTransaction(tx);
+
+    const tx2 = new Transaction({ txInput: new TransactionInput(), hash: 'xyz2' } as Transaction);
+    const validation = blockchain.addTransaction(tx2);
+
+    expect(validation.success).toBeFalsy();
   });
 
   it('should not add transaction (duplicated in blockchain)', () => {
@@ -146,9 +156,15 @@ describe('Blockchain tests', () => {
 
     blockchain.mempool.push(tx);
 
-    const validation = blockchain.addTransaction(tx);
+    const tx2 = new Transaction(
+      {
+        txInput: new TransactionInput({ fromAddress: 'abc' } as TransactionInput),
+        hash: 'xyz'
+      } as Transaction);
+    const validation = blockchain.addTransaction(tx2);
 
     expect(validation.success).toBe(false);
+    expect(validation.message).toBe('Duplicated tx in mempool.');
   });
 
   it('should get transaction (mempool)', () => {
@@ -162,7 +178,7 @@ describe('Blockchain tests', () => {
   it('should get transaction (blockchain)', () => {
     const tx = new Transaction({ txInput: new TransactionInput(), hash: 'XYZ' } as Transaction);
 
-    blockchain.getChain().push(new Block({transactions: [tx]} as Block));
+    blockchain.getChain().push(new Block({ transactions: [tx] } as Block));
 
     const result = blockchain.getTransaction('XYZ');
     expect(result.blockIndex).toEqual(1);

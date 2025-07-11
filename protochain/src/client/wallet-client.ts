@@ -32,7 +32,8 @@ function menu() {
     console.log('2 - Recover wallet');
     console.log('3 - Balance');
     console.log('4 - Send tx');
-    console.log('5 - Exit');
+    console.log('5 - Search tx');
+    console.log('6 - Exit');
 
     rl.question('Choose your option: ', (answer) => {
       switch (answer) {
@@ -49,6 +50,9 @@ function menu() {
           sendTransaction();
           break;
         case '5':
+          searchTransaction();
+          break;
+        case '6':
           exitProgram();
           break;
         default:
@@ -153,6 +157,18 @@ function sendTransaction() {
     });
   });
   preMenu();
+}
+
+function searchTransaction() {
+  console.clear();
+  rl.question('Enter the transaction hash to search: ', async (txHash) => { 
+    const response = await axios.get(`${BLOCKCHAIN_SERVER}/transactions/${txHash}`);
+
+    console.log('Transaction details:');
+    console.log(response.data);
+
+    return preMenu();
+  });
 }
 
 function exitProgram() {
