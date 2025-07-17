@@ -6,6 +6,7 @@ import configEnv from "../config/config-env.ts";
 import Wallet from "../lib/wallet.ts";
 import Transaction from '../lib/transaction.ts';
 import TransactionInput from '../lib/transaction-input.ts';
+import TransactionOutput from '../lib/transaction-output.ts';
 
 const BLOCKCHAIN_SERVER = configEnv.BLOCKCHAIN_SERVER;
 let myWalletPub = '';
@@ -131,18 +132,31 @@ function sendTransaction() {
         return preMenu();
       }
 
-      // TODO: balance validation
+      const walletResponse = await axios.get(`${BLOCKCHAIN_SERVER}/wallet/${myWalletPub}`);
 
-      const tx = new Transaction({
-        to: recipient,
-        txInput: new TransactionInput({
-          amount: amountNum,
-          fromAddress: myWalletPub
-        } as TransactionInput)
-      } as Transaction);
+      const balance = walletResponse.data.balance as number;
+      const fee = walletResponse.data.fee as number;
+      const utxo = walletResponse.data.utxo as TransactionOutput[];
 
-      tx.txInput.sign(myWalletPriv);
+      if (balance < amountNum + fee) {
+        console.log(`Insufficient balance. Your balance is ${balance}, but you need at least ${amountNum + fee}.`);
+        return preMenu();
+      }
+
+      const tx = new Transaction();
+      tx.txOutputs = [new TransactionOutput({
+        toAddress: recipient,
+        amount: amountNum
+      } as TransactionOutput)];
+      tx.txInputs = [new TransactionInput({
+        amount: amountNum,
+        fromAddress: myWalletPub,
+        previousTx: utxo[0].tx
+      } as TransactionInput)];
+
+      tx.txInputs[0].sign(myWalletPriv);
       tx.hash = tx.getHash();
+      tx.txOutputs[0].tx = tx.hash;
 
       try {
         const txResponse = await axios.post(`${BLOCKCHAIN_SERVER}/transactions`, tx);

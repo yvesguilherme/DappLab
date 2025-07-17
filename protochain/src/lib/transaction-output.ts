@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import { BigNumberish } from 'ethers';
 
-import Validation from "./validation";
+import Validation from "./validation.ts";
 
 /**
  * Represents an output in a blockchain transaction.
@@ -25,7 +25,7 @@ class TransactionOutput {
 
   getHash(): string {
     return createHash('sha256')
-      .update(`${this.toAddress}${this.amount}${this.tx}`)
+      .update(`${this.toAddress}${this.amount}`)
       .digest('hex');
   }
 }

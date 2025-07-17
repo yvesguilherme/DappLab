@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 
 import log from '../util/log.ts';
 import Blockchain from '../lib/blockchain.ts';
@@ -7,6 +7,7 @@ import Block from '../lib/block.ts';
 import configEnv from '../config/config-env.ts';
 import Transaction from '../lib/transaction.ts';
 import Wallet from '../lib/wallet.ts';
+import TransactionOutput from '../lib/transaction-output.ts';
 
 const app = express();
 const port = configEnv.BLOCKCHAIN_PORT ?? 3000;
@@ -81,7 +82,7 @@ apiRouter.post('/block', (req: Request, res: Response): any => {
 });
 
 apiRouter.get('/transactions/{*hash}', (req: Request, res: Response) => {
-  if (req.params.hash) { 
+  if (req.params.hash) {
     res.json(blockchain.getTransaction(req.params.hash[0]));
   } else {
     res.json({
@@ -91,7 +92,7 @@ apiRouter.get('/transactions/{*hash}', (req: Request, res: Response) => {
   }
 });
 
-apiRouter.post('/transactions', (req: Request, res: Response): any => { 
+apiRouter.post('/transactions', (req: Request, res: Response): any => {
   if (req.body.hash === undefined) {
     return res
       .status(422)
@@ -108,6 +109,21 @@ apiRouter.post('/transactions', (req: Request, res: Response): any => {
   }
 });
 
+apiRouter.get('/wallet/:walletAddres', (req: Request, res: Response): any => {
+  const wallet = req.params.walletAddres;
+
+  // TODO: create final version of this endpoint
+  return res.json({
+    balance: 10,
+    fee: blockchain.getFeePerTx(),
+    utxo: [new TransactionOutput({
+      amount: 10,
+      toAddress: wallet,
+      tx: 'dummy-tx-hash'
+    } as TransactionOutput)]
+  })
+});
+
 function isValidBlockPayload(data: any): boolean {
   return data.previousHash !== undefined &&
     data.index !== undefined &&
@@ -121,7 +137,7 @@ function isValidBlockPayload(data: any): boolean {
 app.use('/api', apiRouter);
 
 if (process.argv.includes('--run') || process.argv.includes('--r')) {
-  app.listen(port, () => log.info(`Blockchain server is running on http://localhost:${port}`));
+  app.listen(port, () => log.info(`Blockchain server is running on http://localhost:${port}! Wallet: ${wallet.publicKey}`));
 }
 
 export { app };
