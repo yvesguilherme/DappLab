@@ -26,7 +26,7 @@ class Block {
     this.previousHash = block?.previousHash ?? '';
     this.transactions = block?.transactions ?? [] as Transaction[];
     this.nonce = block?.nonce ?? 0;
-    this.miner = block?.miner ?? '';
+    this.miner = block?.miner ?? 'abc';
     this.hash = block?.hash ?? this.getHash();
   }
 

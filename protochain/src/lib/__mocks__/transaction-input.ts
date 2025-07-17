@@ -9,12 +9,14 @@ class TransactionInput {
   fromAddress: string; // Public key of the sender
   amount: BigNumberish;
   signature: string;
+  previousTx: string;
 
   /**
    * Creates a new TransactionInput instance.
    * @param txInput Optional TransactionInput object to initialize the instance.
    */
   constructor(txInput?: TransactionInput) {
+    this.previousTx = txInput?.previousTx ?? 'xyz';
     this.fromAddress = txInput?.fromAddress ?? 'wallet1';
     this.amount = txInput?.amount ?? '10';
     this.signature = txInput?.signature ?? 'abc';
@@ -45,8 +47,8 @@ class TransactionInput {
    * @returns Validation object indicating success or failure.
    */
   isValid(): Validation { 
-    if(!this.signature) {
-      return Validation.failure('Signature is required.');
+    if (!this.previousTx || !this.signature) {
+      return Validation.failure('Signature and previous tx are required.');
     }
 
     if (BigInt(this.amount) < 1n) {

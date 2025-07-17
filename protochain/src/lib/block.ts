@@ -81,7 +81,10 @@ class Block {
 
       if (manyTxFee.length > 1) return Validation.failure('Too many fee transactions in block.');
 
-      if (manyTxFee[0].to !== this.miner) return Validation.failure('Invalid fee tx: different from miner.');
+      const invalidToAddress = !manyTxFee[0].txOutputs.some(txo => txo.toAddress === this.miner);
+      if (invalidToAddress) return Validation.failure('Invalid fee tx: different from miner.');
+
+      // TODO: add validation for the number of fee transactions
 
       if (errors.length) return Validation.failure('Invalid block due to invalid tx: ' + errors.join(', '));
     }
@@ -89,7 +92,7 @@ class Block {
     if (previousIndex !== this.index - 1) return Validation.failure('Invalid previous index.');
     if (this.timestamp < 1) return Validation.failure('Invalid timestamp.');
     if (previousHash !== this.previousHash) return Validation.failure('Invalid previous hash.');
-    if (!this.nonce || !this.miner) return Validation.failure('No mined.');
+    if (this.nonce < 1 || !this.miner) return Validation.failure('No mined.');
 
     const prefix = this.createPrefix(difficulty);
 
