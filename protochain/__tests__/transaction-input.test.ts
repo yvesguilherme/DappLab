@@ -14,6 +14,7 @@ describe('Transaction Input tests', () => {
     const txInput = new TransactionInput({
       amount: 10,
       fromAddress: alice.publicKey,
+      previousTx: 'abc'
     } as TransactionInput);
 
     txInput.sign(alice.privateKey);
@@ -36,13 +37,14 @@ describe('Transaction Input tests', () => {
     } as TransactionInput);
 
     expect(txInput.isValid().success).toBe(false);
-    expect(txInput.isValid().message).toBe('Signature is required.');
+    expect(txInput.isValid().message).toBe('Signature and previous tx are required.');
   });
 
   it('should be invalid with zero amount', () => {
     const txInput = new TransactionInput({
       amount: 0,
       fromAddress: alice.publicKey,
+      previousTx: 'xyz'
     } as TransactionInput);
 
     txInput.sign(alice.privateKey);
@@ -55,6 +57,7 @@ describe('Transaction Input tests', () => {
     const txInput = new TransactionInput({
       amount: -10,
       fromAddress: alice.publicKey,
+      previousTx: 'xyz'
     } as TransactionInput);
 
     txInput.sign(alice.privateKey);
@@ -65,21 +68,23 @@ describe('Transaction Input tests', () => {
 
   it('should be invalid if signature does not match public key', () => {
     const bob = new Wallet();
-    const txInput2 = new TransactionInput({
+    const txInput = new TransactionInput({
       amount: 10,
       fromAddress: bob.publicKey,
+      previousTx: 'xyz'
     } as TransactionInput);
 
-    txInput2.sign(alice.privateKey);
+    txInput.sign(alice.privateKey);
 
-    expect(txInput2.isValid().success).toBe(false);
-    expect(txInput2.isValid().message).toBe('Invalid tx input signature.');
+    expect(txInput.isValid().success).toBe(false);
+    expect(txInput.isValid().message).toBe('Invalid tx input signature.');
   });
 
   it('should be invalid if the amount is changed after signing', () => {
     const txInput3 = new TransactionInput({
       amount: 10,
       fromAddress: alice.publicKey,
+      previousTx: 'xyz'
     } as TransactionInput);
 
     txInput3.sign(alice.privateKey);
@@ -94,6 +99,7 @@ describe('Transaction Input tests', () => {
     const txInput = new TransactionInput({
       amount: 10,
       fromAddress: alice.publicKey,
+      previousTx: 'xyz'
     } as TransactionInput);
 
     txInput.sign(alice.privateKey);
@@ -108,5 +114,17 @@ describe('Transaction Input tests', () => {
 
     expect(txInput.isValid().success).toBe(false);
     expect(txInput.isValid().message).toBe('Invalid tx input signature.');
+  });
+
+  it('should not be valid (invalid previous tx)', () => {
+    const txInput = new TransactionInput({
+      amount: 10,
+      fromAddress: alice.publicKey,
+    } as TransactionInput);
+
+    txInput.sign(alice.privateKey);
+
+    expect(txInput.isValid().success).toBe(false);
+    expect(txInput.isValid().message).toBe('Signature and previous tx are required.');
   });
 });

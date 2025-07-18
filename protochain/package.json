@@ -9,7 +9,7 @@
     "miner": "NODE_NO_WARNINGS=1 node --env-file=.env --import ./loader.js src/client/miner-client.ts --r",
     "wallet": "NODE_NO_WARNINGS=1 npx nodemon --watch src --exec node --env-file=.env --import ./loader.js src/client/wallet-client.ts -e ts",
     "start": "node dist/blockchain.js",
-    "test": "jest --no-cache"
+    "test": "rm -rf coverage; jest --no-cache"
   },
   "engines": {
     "node": "v22.16.0"

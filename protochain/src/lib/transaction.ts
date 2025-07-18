@@ -94,7 +94,7 @@ class Transaction {
    */
   private validateInputs(): Validation {
     if (!this.txInputs?.length) {
-      return Validation.success();
+      return Validation.failure('NO TXI.');
     }
 
     const invalids = this.txInputs.map(txi => txi.isValid()).filter(v => !v.success);

@@ -4,11 +4,13 @@ import { jest, describe, expect, test } from '@jest/globals';
 import { app } from '../src/server/blockchain-server.ts';
 import Transaction from '../src/lib/transaction.ts';
 import TransactionInput from '../src/lib/transaction-input.ts';
+import TransactionOutput from '../src/lib/transaction-output.ts';
 
 jest.mock('../src/lib/block');
 jest.mock('../src/lib/blockchain');
 jest.mock('../src/lib/transaction');
 jest.mock('../src/lib/transaction-input');
+jest.mock('../src/lib/transaction-output');
 
 describe('blochain-server tests', () => {
   test('GET /api/status - should return status', async () => {
@@ -18,13 +20,13 @@ describe('blochain-server tests', () => {
 
     const expectedStatus = {
       isValid: true,
-      mempool: 0,
+      mempool: 1,
       blocks: 1,
       lastBlock: {
-        hash: 'abcdef1234567890',
+        hash: '00cdef1234567890',
         index: 0,
-        previousHash: 'abc',
-        miner: '',
+        previousHash: '',
+        miner: expect.any(String),
         nonce: 0,
         timestamp: expect.any(Number),
         transactions: expect.any(Array),
@@ -92,7 +94,7 @@ describe('blochain-server tests', () => {
   });
 
   test('POST /api/block - should return 201 when the block is added', async () => {
-    const tx = new Transaction({ txInput: new TransactionInput() } as Transaction);
+    const tx = new Transaction({ txInputs: [new TransactionInput()] } as Transaction);
     tx.hash = tx.getHash();
 
     const newBlock = {
@@ -116,7 +118,7 @@ describe('blochain-server tests', () => {
   });
 
   test('POST /api/block - should return 422 when previousHash is invalid', async () => {
-    const tx = new Transaction({ txInput: new TransactionInput() } as Transaction);
+    const tx = new Transaction({ txInputs: [new TransactionInput()] } as Transaction);
     tx.hash = tx.getHash();
 
     const newBlock = {
@@ -143,7 +145,7 @@ describe('blochain-server tests', () => {
   });
 
   test('POST /api/block - should return 422 when index is invalid', async () => {
-    const tx = new Transaction({ txInput: new TransactionInput() } as Transaction);
+    const tx = new Transaction({ txInputs: [new TransactionInput()] } as Transaction);
     tx.hash = tx.getHash();
 
     const newBlock = {
@@ -160,7 +162,7 @@ describe('blochain-server tests', () => {
   });
 
   test('POST /api/block - should return 500 when the block is invalid', async () => {
-    const tx = new Transaction({ txInput: new TransactionInput() } as Transaction);
+    const tx = new Transaction({ txInputs: [new TransactionInput()] } as Transaction);
     tx.hash = tx.getHash();
 
     const newBlock = {
@@ -248,7 +250,7 @@ describe('blochain-server tests', () => {
   });
 
   test('POST /api/transactions - should add transaction', async () => {
-    const tx = new Transaction({ txInput: new TransactionInput(), to: 'xpto' } as Transaction);
+    const tx = new Transaction({ txInputs: [new TransactionInput()], txOutputs: [new TransactionOutput()] } as Transaction);
 
     const response = await request(app)
       .post('/api/transactions')
@@ -269,10 +271,10 @@ describe('blochain-server tests', () => {
   });
 
   test('POST /api/transactions - should return http 400', async () => {
-    const txInput = new TransactionInput();
-    txInput.amount = -1;
+    const txInputs = [new TransactionInput()];
+    txInputs[0].amount = -1;
 
-    const tx = new Transaction({ txInput, to: 'wallet' } as Transaction);
+    const tx = new Transaction({ txInputs, txOutputs: [new TransactionOutput()] } as Transaction);
 
     const response = await request(app)
       .post('/api/transactions')

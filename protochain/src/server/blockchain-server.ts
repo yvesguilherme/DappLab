@@ -1,4 +1,4 @@
-import express, { NextFunction, Request, Response } from 'express';
+import express, { Request, Response } from 'express';
 
 import log from '../util/log.ts';
 import Blockchain from '../lib/blockchain.ts';
@@ -8,11 +8,13 @@ import configEnv from '../config/config-env.ts';
 import Transaction from '../lib/transaction.ts';
 import Wallet from '../lib/wallet.ts';
 import TransactionOutput from '../lib/transaction-output.ts';
+import { jsonBigIntMiddleware } from '../middleware/json-bigint-middleware.ts';
 
 const app = express();
 const port = configEnv.BLOCKCHAIN_PORT ?? 3000;
 
 app.use(express.json());
+app.use(jsonBigIntMiddleware);
 
 if (process.argv.includes('--run') || process.argv.includes('--r')) {
   app.use(HttpLog.logRequest);

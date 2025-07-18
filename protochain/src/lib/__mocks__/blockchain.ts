@@ -4,7 +4,7 @@ import Validation from '../validation.ts';
 import Transaction from '../transaction.ts';
 import TransactionType from '../model/transaction.model.ts';
 import TransactionSearch from '../model/transaction-search.model.ts';
-import TransactionInput from '../transaction-input.ts';
+import TransactionOutput from '../transaction-output.ts';
 
 /**
  * Mock Blockchain class for testing purposes.
@@ -23,15 +23,37 @@ class Blockchain {
     this.chain = [];
     this.mempool = [new Transaction()];
 
-    this.chain.push(new Block({
-      index: this.#nextIndex,
-      hash: 'abc',
-      previousHash: '',
-      miner,
-      timestamp: Date.now()
-    } as Block));
+    const genesis = this.createGenesisBlock(miner);
+    this.chain.push(genesis);
 
     this.#nextIndex++;
+  }
+
+  createGenesisBlock(miner: string): Block {
+    const amount = BigInt(10);
+
+    const tx = new Transaction({
+      type: TransactionType.FEE,
+      txOutputs: [new TransactionOutput({
+        toAddress: miner,
+        amount,
+      } as TransactionOutput)],
+    } as Transaction);
+
+    tx.hash = tx.getHash();
+    tx.txOutputs[0].tx = tx.hash;
+
+    const block = new Block({
+      transactions: [tx],
+      index: this.#nextIndex,
+      previousHash: '',
+      hash: 'abc',
+      timestamp: Date.now(),
+    } as Block);
+
+    block.mine(1, miner);
+
+    return block;
   }
 
   getChain(): Block[] {
