@@ -65,7 +65,7 @@ class Blockchain {
   }
 
   getBlock(hashOrIndex: number | string): Block | null {
-    if (!hashOrIndex || hashOrIndex === '-1') {
+    if (!hashOrIndex === null || hashOrIndex === '-1') {
       return null;
     }
 

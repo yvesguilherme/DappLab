@@ -18,5 +18,8 @@ describe('Validation tests', () => {
   it('should throw an error if failure is called without a message', () => {
     expect(() => Validation.failure(''))
       .toThrowError('Validation failure requires a descriptive message!');
+    
+    expect(() => Validation.failure(null as any))
+      .toThrowError('Validation failure requires a descriptive message!');
   });
 });

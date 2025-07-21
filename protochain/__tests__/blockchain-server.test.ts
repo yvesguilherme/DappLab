@@ -43,10 +43,10 @@ describe('blochain-server tests', () => {
       .set('Accept', 'application/json');
 
     const expectedBlock = {
-      hash: 'abcdef1234567890',
+      hash: '00cdef1234567890',
       index: 0,
-      previousHash: 'abc',
-      miner: '',
+      previousHash: '',
+      miner: expect.any(String),
       nonce: 0,
       timestamp: expect.any(Number),
       transactions: expect.any(Array),
@@ -67,14 +67,14 @@ describe('blochain-server tests', () => {
 
   test('GET /api/block/:hash - should return genesis', async () => {
     const response = await request(app)
-      .get('/api/block/abcdef1234567890')
+      .get('/api/block/00cdef1234567890')
       .set('Accept', 'application/json');
 
     const expectedBlock = {
-      hash: 'abcdef1234567890',
+      hash: '00cdef1234567890',
       index: 0,
-      previousHash: 'abc',
-      miner: '',
+      previousHash: '',
+      miner: expect.any(String),
       nonce: 0,
       timestamp: expect.any(Number),
       transactions: expect.any(Array),
@@ -95,11 +95,10 @@ describe('blochain-server tests', () => {
 
   test('POST /api/block - should return 201 when the block is added', async () => {
     const tx = new Transaction({ txInputs: [new TransactionInput()] } as Transaction);
-    tx.hash = tx.getHash();
 
     const newBlock = {
       index: 1,
-      previousHash: 'abcdef1234567890',
+      previousHash: '00cdef1234567890',
       transactions: [tx]
     };
 
@@ -112,7 +111,7 @@ describe('blochain-server tests', () => {
       ...newBlock,
       hash: expect.any(String),
       nonce: expect.any(Number),
-      miner: '',
+      miner: 'abc',
       timestamp: expect.any(Number),
     });
   });
@@ -246,7 +245,31 @@ describe('blochain-server tests', () => {
       .set('Accept', 'application/json');
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ next: [], total: 0 });
+    expect(response.body).toEqual({
+      next: [
+        expect.objectContaining({
+          hash: 'abc',
+          timestamp: expect.any(Number),
+          txInputs: [
+            expect.objectContaining({
+              amount: '10',
+              fromAddress: 'wallet1',
+              previousTx: 'xyz',
+              signature: 'abc',
+            }),
+          ],
+          txOutputs: [
+            expect.objectContaining({
+              amount: '10',
+              toAddress: 'abc',
+              tx: 'xyz',
+            }),
+          ],
+          type: 1,
+        }),
+      ],
+      total: 1,
+    });
   });
 
   test('POST /api/transactions - should add transaction', async () => {
@@ -271,16 +294,33 @@ describe('blochain-server tests', () => {
   });
 
   test('POST /api/transactions - should return http 400', async () => {
-    const txInputs = [new TransactionInput()];
-    txInputs[0].amount = -1;
-
-    const tx = new Transaction({ txInputs, txOutputs: [new TransactionOutput()] } as Transaction);
-
+    const tx = new Transaction({ txInputs: [new TransactionInput()], txOutputs: [new TransactionOutput()] } as Transaction);
+    tx.timestamp = -1;
+    
     const response = await request(app)
       .post('/api/transactions')
       .send(tx);
 
     expect(response.status).toEqual(400);
-    expect(response.body).toEqual({ message: 'Invalid transaction input: Amount must be greater than zero.', success: false });
+    expect(response.body).toEqual({ message: 'Invalid mock transaction.', success: false });
+  });
+
+  test('GET /api/wallet/:walletAddress - should return wallet info', async () => {
+    const response = await request(app)
+      .get('/api/wallet/abc123')
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      balance: 10,
+      fee: 1,
+      utxo: [
+        expect.objectContaining({
+          amount: 10,
+          toAddress: 'abc123',
+          tx: 'dummy-tx-hash',
+        }),
+      ],
+    });
   });
 });

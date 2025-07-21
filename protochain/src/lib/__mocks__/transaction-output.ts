@@ -12,7 +12,7 @@ class TransactionOutput {
 
   constructor(txOutput?: TransactionOutput) {
     this.toAddress = txOutput?.toAddress ?? 'abc';
-    this.amount = txOutput?.amount ?? BigInt(10);
+    this.amount = txOutput?.amount ?? '10';
     this.tx = txOutput?.tx ?? 'xyz';
   }
 
