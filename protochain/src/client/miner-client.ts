@@ -8,6 +8,8 @@ import Wallet from '../lib/wallet.ts';
 import Transaction from '../lib/transaction.ts';
 import TransactionType from '../lib/model/transaction.model.ts';
 import TransactionOutput from '../lib/transaction-output.ts';
+import { serializeBigInt } from '../util/big-int.ts';
+import Blockchain from '../lib/blockchain.ts';
 
 const BLOCKCHAIN_API_URL = configEnv.BLOCKCHAIN_SERVER ?? 'http://localhost:3000/api';
 
@@ -16,21 +18,30 @@ log.info(`Logged as: ${minerWallet.publicKey}`);
 
 let totalMinedBlocks = 0;
 
-function getRewardTx(): Transaction {
+function getRewardTx(blockInfo: BlockInfo, nextBlock: Block): Transaction | undefined {
+  let amount = BigInt(0);
+
+  if (blockInfo.difficulty <= blockInfo.maxDifficulty) {
+    amount += Blockchain.getRewardAmount(blockInfo.difficulty);
+  }
+
+  const fees = nextBlock.transactions.reduce((sum, tx) => sum + tx.getFee(), 0n);
+  const feeCheck = nextBlock.transactions.length * blockInfo.feePerTx;
+
+  if (fees < feeCheck) {
+    log.warn('Low fees. Awaiting next block.');
+    setTimeout(() => mineBlock(), 5000);
+    return;
+  }
+
+  amount += fees;
+
   const txo = new TransactionOutput({
     toAddress: minerWallet.publicKey,
-    amount: 10
+    amount
   } as TransactionOutput);
 
-  const tx = new Transaction({
-    txOutputs: [txo],
-    type: TransactionType.FEE
-  } as Transaction);
-  
-  tx.hash = tx.getHash();
-  tx.txOutputs[0].tx = tx.hash;
-
-  return tx;
+  return Transaction.fromReward(txo);
 }
 
 async function mineBlock() {
@@ -47,7 +58,13 @@ async function mineBlock() {
 
   const newBlock = Block.fromBlockInfoToBlock(blockInfo);
 
-  newBlock.transactions.push(getRewardTx());
+  const tx = getRewardTx(blockInfo, newBlock);
+
+  if (!tx) {
+    return;
+  }
+
+  newBlock.transactions.push(tx);
 
   newBlock.miner = minerWallet.publicKey;
   newBlock.hash = newBlock.getHash();
@@ -59,7 +76,8 @@ async function mineBlock() {
   log.info(`Block mined! Sending block #${newBlock.index} to the blockchain...`);
 
   try {
-    await axios.post(`${BLOCKCHAIN_API_URL}/block`, { ...newBlock });
+    const serializedBlock = serializeBigInt(newBlock);
+    await axios.post(`${BLOCKCHAIN_API_URL}/block`, { ...serializedBlock });
 
     log.info(`Block #${newBlock.index} successfully added to the blockchain!`);
 
@@ -72,7 +90,7 @@ async function mineBlock() {
 
   setTimeout(() => mineBlock(), 1000);
 
-  log.info(data)
+  log.info(data);
 }
 
 mineBlock();

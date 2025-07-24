@@ -5,6 +5,7 @@ import Transaction from './transaction.ts';
 import TransactionType from './model/transaction.model.ts';
 import TransactionSearch from './model/transaction-search.model.ts';
 import TransactionOutput from './transaction-output.ts';
+import TransactionInput from './transaction-input.ts';
 
 class Blockchain {
   static readonly DIFFCULTY_FACTOR = 2;
@@ -23,16 +24,14 @@ class Blockchain {
     this.#nextIndex++;
   }
 
-  createGenesisBlock(miner: string): Block { 
-    const amount = BigInt(10); //TODO: calculate the amount
+  createGenesisBlock(miner: string): Block {
+    const amount = Blockchain.getRewardAmount(this.getDifficulty());
 
-    const tx = new Transaction({
-      type: TransactionType.FEE,
-      txOutputs: [new TransactionOutput({
-        toAddress: miner,
-        amount,
-      } as TransactionOutput)],
-    } as Transaction);
+    const txo = new TransactionOutput({
+      toAddress: miner,
+      amount,
+    } as TransactionOutput);
+    const tx = Transaction.fromReward(txo);
 
     tx.hash = tx.getHash();
     tx.txOutputs[0].tx = tx.hash;
@@ -76,10 +75,23 @@ class Blockchain {
         return new Validation(false, `This wallet has a pending transaction`);
       }
 
-      // TODO: validate the source funds (UTXO)
+      const utxo = this.getUTXO(fromAddress);
+
+      for (let i = 0; i < transaction.txInputs.length; i++) {
+        const txi = transaction.txInputs[i];
+        const utxoIndex = utxo.findIndex(txo => txo.tx === txi.previousTx && txo.amount >= txi.amount);
+
+        if (utxoIndex === -1) {
+          return Validation.failure(`Invalid transaction: the TXO is already spent or unexistent`);
+        }
+
+        if (txi.fromAddress !== fromAddress) {
+          return new Validation(false, `Input ${i} does not match the wallet address`);
+        }
+      }
     }
 
-    const validation = transaction.isValid();
+    const validation = transaction.isValid(this.getDifficulty(), this.getFeePerTx());
 
     if (!validation.success) {
       return new Validation(false, `Invalid tx: ${validation.message}`);
@@ -105,7 +117,7 @@ class Blockchain {
       return Validation.failure('There is no next block info.');
     }
 
-    const blockValidation: Validation = block.isValid(nextBlock.index - 1, nextBlock.previousHash, nextBlock.difficulty);
+    const blockValidation: Validation = block.isValid(nextBlock.index - 1, nextBlock.previousHash, nextBlock.difficulty, nextBlock.feePerTx);
 
     if (blockValidation.success) {
       const txs = block.transactions
@@ -153,7 +165,7 @@ class Blockchain {
       const currentBlock = this.chain[i];
       const previousBlock = this.chain[i - 1];
 
-      const isValid = currentBlock.isValid(previousBlock.index, previousBlock.hash, this.getDifficulty());
+      const isValid = currentBlock.isValid(previousBlock.index, previousBlock.hash, this.getDifficulty(), this.getFeePerTx());
 
       if (!isValid) {
         return false;
@@ -182,6 +194,55 @@ class Blockchain {
 
     return { transactions, index, previousHash, difficulty, maxDifficulty, feePerTx } as IBlockInfo;
   }
+
+  getTxInputs(wallet: string): (TransactionInput | undefined)[] {
+    return this.chain
+      .flatMap(block => block.transactions)
+      .flatMap(tx => tx.txInputs ?? [])
+      .filter(txi => txi?.fromAddress === wallet);
+  }
+
+  getTxOutputs(wallet: string): TransactionOutput[] {
+    return this.chain
+      .flatMap(block => block.transactions)
+      .flatMap(tx => tx.txOutputs ?? [])
+      .filter(txo => txo.toAddress === wallet);
+  }
+
+  getUTXO(wallet: string): TransactionOutput[] {
+    const txIns = this.getTxInputs(wallet);
+    const txOuts = this.getTxOutputs(wallet);
+
+    if (!txIns.length) {
+      return txOuts;
+    }
+
+    txIns.forEach(txi => {
+      const txOutIndex = txOuts.findIndex(txo => txo.amount === txi?.amount);
+      if (txOutIndex !== -1) {
+        txOuts.splice(txOutIndex, 1);
+      }
+    });
+
+    return txOuts;
+  }
+
+  getBalance(wallet: string): string { 
+    const utxo = this.getUTXO(wallet);
+
+    if(!utxo || !utxo.length) {
+      return '0';
+    }
+
+    return utxo.
+      reduce((acc, txo) => acc + txo?.amount, 0n)
+      .toString();
+  }
+
+  static getRewardAmount(difficulty: number): bigint {
+    return BigInt((64 - difficulty) * 10);
+  }
+  
 }
 
 export default Blockchain;

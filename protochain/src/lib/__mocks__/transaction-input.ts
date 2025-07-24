@@ -1,5 +1,3 @@
-import { BigNumberish } from 'ethers';
-
 import Validation from '../validation';
 
 /**
@@ -7,7 +5,7 @@ import Validation from '../validation';
  */
 class TransactionInput {
   fromAddress: string; // Public key of the sender
-  amount: BigNumberish;
+  amount: bigint;
   signature: string;
   previousTx: string;
 
@@ -18,7 +16,7 @@ class TransactionInput {
   constructor(txInput?: TransactionInput) {
     this.previousTx = txInput?.previousTx ?? 'xyz';
     this.fromAddress = txInput?.fromAddress ?? 'wallet1';
-    this.amount = txInput?.amount ?? '10';
+    this.amount = txInput?.amount ?? 10n;
     this.signature = txInput?.signature ?? 'abc';
   }
 

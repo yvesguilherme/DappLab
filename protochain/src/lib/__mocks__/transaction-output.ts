@@ -1,5 +1,3 @@
-import { BigNumberish } from 'ethers';
-
 import Validation from "../validation";
 
 /**
@@ -7,12 +5,12 @@ import Validation from "../validation";
  */
 class TransactionOutput {
   toAddress: string;
-  amount: BigNumberish;
+  amount: bigint;
   tx?: string;
 
   constructor(txOutput?: TransactionOutput) {
     this.toAddress = txOutput?.toAddress ?? 'abc';
-    this.amount = txOutput?.amount ?? '10';
+    this.amount = txOutput?.amount ?? 10n;
     this.tx = txOutput?.tx ?? 'xyz';
   }
 

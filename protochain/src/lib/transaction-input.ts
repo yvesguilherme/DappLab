@@ -1,10 +1,11 @@
 import { createHash } from 'crypto';
 
-import { BigNumberish } from 'ethers';
 import * as ecc from 'tiny-secp256k1';
 import ECPairFactory from 'ecpair';
 
 import Validation from './validation.ts';
+import TransactionOutput from './transaction-output.ts';
+import { parseBigInt } from '../util/big-int.ts';
 
 const ECPair = ECPairFactory(ecc);
 
@@ -15,7 +16,7 @@ const ECPair = ECPairFactory(ecc);
  */
 class TransactionInput {
   fromAddress: string; // Public key of the sender
-  amount: BigNumberish;
+  amount: bigint;
   signature: string;
   previousTx: string;
 
@@ -26,7 +27,7 @@ class TransactionInput {
   constructor(txInput?: TransactionInput) {
     this.previousTx = txInput?.previousTx ?? '';
     this.fromAddress = txInput?.fromAddress ?? '';
-    this.amount = txInput?.amount ?? '0';
+    this.amount = parseBigInt(txInput?.amount);
     this.signature = txInput?.signature ?? '';
   }
 
@@ -66,7 +67,7 @@ class TransactionInput {
       return Validation.failure('Signature and previous tx are required.');
     }
 
-    if (BigInt(this.amount) < 1n) {
+    if (this.amount < 1n) {
       return Validation.failure('Amount must be greater than zero.');
     }
 
@@ -78,6 +79,14 @@ class TransactionInput {
     return isValidSignature
       ? Validation.success()
       : Validation.failure('Invalid tx input signature.');
+  }
+
+  static fromTxo(txo: TransactionOutput): TransactionInput {
+    return new TransactionInput({
+      amount: txo.amount,
+      fromAddress: txo.toAddress,
+      previousTx: txo.tx
+    } as TransactionInput);
   }
 }
 

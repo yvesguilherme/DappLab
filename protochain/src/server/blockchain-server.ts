@@ -9,6 +9,7 @@ import Transaction from '../lib/transaction.ts';
 import Wallet from '../lib/wallet.ts';
 import TransactionOutput from '../lib/transaction-output.ts';
 import { jsonBigIntMiddleware } from '../middleware/json-bigint-middleware.ts';
+import { convertBigIntFields } from '../util/big-int.ts';
 
 const app = express();
 const port = configEnv.BLOCKCHAIN_PORT ?? 3000;
@@ -72,6 +73,7 @@ apiRouter.post('/block', (req: Request, res: Response): any => {
     nonce: data.nonce,
     hash: data.hash
   } as Block);
+
   const blockchainIsValid = blockchain.addBlock(block);
 
   if (!blockchainIsValid.success) {
@@ -101,7 +103,10 @@ apiRouter.post('/transactions', (req: Request, res: Response): any => {
       .json({ error: 'Unprocessable Entity' });
   }
 
-  const tx = new Transaction(req.body as Transaction);
+  const txData = convertBigIntFields(req.body);
+  const tx = new Transaction(txData);
+  // const tx = new Transaction(req.body as Transaction);
+
   const validation = blockchain.addTransaction(tx);
 
   if (validation.success) {
@@ -114,16 +119,11 @@ apiRouter.post('/transactions', (req: Request, res: Response): any => {
 apiRouter.get('/wallet/:walletAddres', (req: Request, res: Response): any => {
   const wallet = req.params.walletAddres;
 
-  // TODO: create final version of this endpoint
-  return res.json({
-    balance: 10,
-    fee: blockchain.getFeePerTx(),
-    utxo: [new TransactionOutput({
-      amount: 10,
-      toAddress: wallet,
-      tx: 'dummy-tx-hash'
-    } as TransactionOutput)]
-  })
+  const balance = blockchain.getBalance(wallet);
+  const utxo = blockchain.getUTXO(wallet);
+  const fee = blockchain.getFeePerTx();
+
+  return res.json({ balance, fee, utxo });
 });
 
 function isValidBlockPayload(data: any): boolean {

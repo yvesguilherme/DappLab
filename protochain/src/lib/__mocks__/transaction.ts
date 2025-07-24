@@ -26,10 +26,23 @@ class Transaction {
     return 'abc';
   }
 
-  isValid(): Validation {
-    if (this.timestamp < 1 || !this.hash) return Validation.failure('Invalid mock transaction.');
+  isValid(difficulty: number, totalFees: number): Validation {
+    if (this.timestamp < 1 || !this.hash || !difficulty || !totalFees) return Validation.failure('Invalid mock transaction.');
 
     return Validation.success();
+  }
+
+  static fromReward(txo: TransactionOutput): Transaction {
+    const tx = new Transaction({
+      type: TransactionType.FEE,
+      txOutputs: [txo]
+    } as Transaction);
+
+    tx.txInputs = undefined;
+    tx.hash = tx.getHash();
+    tx.txOutputs[0].tx = tx.hash;
+
+    return tx;
   }
 }
 

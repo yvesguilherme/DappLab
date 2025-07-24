@@ -7,6 +7,7 @@ import Wallet from "../lib/wallet.ts";
 import Transaction from '../lib/transaction.ts';
 import TransactionInput from '../lib/transaction-input.ts';
 import TransactionOutput from '../lib/transaction-output.ts';
+import { serializeBigInt } from '../util/big-int.ts';
 
 const BLOCKCHAIN_SERVER = configEnv.BLOCKCHAIN_SERVER;
 let myWalletPub = '';
@@ -97,7 +98,7 @@ function recoverWallet() {
   });
 }
 
-function getBalance() {
+async function getBalance() {
   console.clear();
 
   if (!myWalletPub) {
@@ -105,7 +106,8 @@ function getBalance() {
     return preMenu();
   }
 
-  // TODO: Get balance from the blockchain server
+  const { data } = await axios.get(`${BLOCKCHAIN_SERVER}/wallet/${myWalletPub}`);
+  console.log(`Your wallet balance: ${data.balance}`);
   preMenu();
 }
 
@@ -127,6 +129,12 @@ function sendTransaction() {
 
     rl.question('Enter the amount to send: ', async (amount) => {
       const amountNum = parseFloat(amount);
+
+      if (!Number.isInteger(amountNum)) {
+        console.log('Please enter an integer amount.');
+        return preMenu();
+      }
+
       if (isNaN(amountNum) || amountNum <= 0) {
         console.log('Invalid amount. Please enter a positive number.');
         return preMenu();
@@ -143,25 +151,43 @@ function sendTransaction() {
         return preMenu();
       }
 
-      const tx = new Transaction();
-      tx.txOutputs = [new TransactionOutput({
-        toAddress: recipient,
-        amount: amountNum
-      } as TransactionOutput)];
-      tx.txInputs = [new TransactionInput({
-        amount: amountNum,
-        fromAddress: myWalletPub,
-        previousTx: utxo[0].tx
-      } as TransactionInput)];
+      const txInputs = utxo.map(txo => TransactionInput.fromTxo(txo));
+      txInputs.forEach(txi => txi.sign(myWalletPriv));
 
-      tx.txInputs[0].sign(myWalletPriv);
+      // Transfer transaction
+      const txOutputs = [] as TransactionOutput[];
+      txOutputs.push(new TransactionOutput({
+        toAddress: recipient,
+        amount: BigInt(Math.floor(amountNum))
+      } as TransactionOutput));
+
+      // Change transaction
+      const remainingBalance = balance - amountNum - fee;
+
+      if (remainingBalance > 0) {
+        txOutputs.push(new TransactionOutput({
+          toAddress: myWalletPub,
+          amount: BigInt(remainingBalance)
+        } as TransactionOutput));
+      }
+
+      const tx = new Transaction({
+        txInputs,
+        txOutputs
+      } as Transaction);
+
       tx.hash = tx.getHash();
-      tx.txOutputs[0].tx = tx.hash;
+      tx.txOutputs.forEach(output => output.tx = tx.hash);
+
+      console.log('Sending transaction...');
+      console.log('Remaining balance:', remainingBalance);
 
       try {
-        const txResponse = await axios.post(`${BLOCKCHAIN_SERVER}/transactions`, tx);
+        const serializedTx = serializeBigInt(tx);
+        console.log('Serialized transaction:', serializedTx);
+        const txResponse = await axios.post(`${BLOCKCHAIN_SERVER}/transactions`, serializedTx);
 
-        console.log('Transaction sent successfully. Waiting the miners!');
+        console.log('Transaction sent successfully. Waiting for the miners!');
         console.log(txResponse.data.hash);
       } catch (error: any) {
         console.error(error.response ? error.response.data : error.message);
@@ -175,7 +201,7 @@ function sendTransaction() {
 
 function searchTransaction() {
   console.clear();
-  rl.question('Enter the transaction hash to search: ', async (txHash) => { 
+  rl.question('Enter the transaction hash to search: ', async (txHash) => {
     const response = await axios.get(`${BLOCKCHAIN_SERVER}/transactions/${txHash}`);
 
     console.log('Transaction details:');

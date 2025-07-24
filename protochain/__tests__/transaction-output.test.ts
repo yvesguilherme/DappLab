@@ -12,7 +12,7 @@ describe('Transaction Output tests', () => {
 
   it('should be valid', () => {
     const txOutput = new TransactionOutput({
-      amount: 10,
+      amount: 10n,
       toAddress: alice.publicKey,
       tx: 'xyz',
     } as TransactionOutput);
@@ -22,7 +22,7 @@ describe('Transaction Output tests', () => {
 
   it('should not be valid', () => {
     const txOutput = new TransactionOutput({
-      amount: -10,
+      amount: -10n,
       toAddress: alice.publicKey,
       tx: 'xyz',
     } as TransactionOutput);
@@ -32,7 +32,7 @@ describe('Transaction Output tests', () => {
 
   it('should return a valid hash', () => {
     const txOutput = new TransactionOutput({
-      amount: 10,
+      amount: 10n,
       toAddress: alice.publicKey,
       tx: 'xyz',
     } as TransactionOutput);
@@ -42,12 +42,23 @@ describe('Transaction Output tests', () => {
     expect(hash.length).toBe(64);
   });
 
+  it('should be valid with a valid amount', () => {
+    const txOutput = new TransactionOutput({
+      amount: '15' as unknown as bigint,
+      toAddress: alice.publicKey,
+      tx: 'xyz',
+    } as TransactionOutput);
+
+    expect(txOutput.isValid().success).toBe(true);
+    expect(txOutput.amount).toBe(15n);
+  });
+
   it('should not be valid (default values)', () => { 
     const txOutput = new TransactionOutput();
 
     expect(txOutput.isValid().success).toBe(false);
     expect(txOutput.toAddress).toBe('');
-    expect(txOutput.amount).toBe('0');
+    expect(txOutput.amount).toBe(0n);
     expect(txOutput.tx).toBe('');
     expect(txOutput.isValid().message).toBe('Negative amount.');
   });

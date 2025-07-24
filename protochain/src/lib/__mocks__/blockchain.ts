@@ -1,10 +1,11 @@
 import IBlockInfo from '../model/block-info.model.ts';
-import Block from '../block.ts';
+import Block from './block.ts';
 import Validation from '../validation.ts';
-import Transaction from '../transaction.ts';
+import Transaction from './transaction.ts';
 import TransactionType from '../model/transaction.model.ts';
 import TransactionSearch from '../model/transaction-search.model.ts';
-import TransactionOutput from '../transaction-output.ts';
+import TransactionOutput from './transaction-output.ts';
+import TransactionInput from './transaction-input.ts';
 
 /**
  * Mock Blockchain class for testing purposes.
@@ -96,7 +97,7 @@ class Blockchain {
   }
 
   addTransaction(transaction: Transaction): Validation {
-    const validation = transaction.isValid();
+    const validation = transaction.isValid(1, 10);
 
     if (!validation.success) {
       return validation;
@@ -120,13 +121,38 @@ class Blockchain {
 
   getNextBlock(): IBlockInfo {
     const transactions = this.mempool.slice(0, 2);
-    const difficulty = 1;
+    const difficulty = 2;
     const previousHash = this.getLastBlock().hash;
     const index = this.chain.length;
     const feePerTx = this.getFeePerTx();
     const maxDifficulty = Blockchain.MAX_DIFFICULTY;
 
     return { transactions, index, previousHash, difficulty, maxDifficulty, feePerTx } as IBlockInfo;
+  }
+
+  getTxInputs(wallet: string): (TransactionInput | undefined)[] {
+    return [new TransactionInput({
+      amount: BigInt(10),
+      fromAddress: wallet,
+      previousTx: 'abc',
+      signature: 'abc'
+    } as TransactionInput)];
+  }
+
+  getTxOutputs(wallet: string): TransactionOutput[] {
+    return [new TransactionOutput({
+      amount: BigInt(10),
+      toAddress: wallet,
+      tx: 'abc'
+    } as TransactionOutput)]
+  }
+
+  getUTXO(wallet: string): TransactionOutput[] {
+    return this.getTxOutputs(wallet);
+  }
+
+  getBalance(wallet: string): string { 
+    return '10';
   }
 }
 

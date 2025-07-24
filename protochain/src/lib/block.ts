@@ -71,10 +71,12 @@ class Block {
    * @param difficulty The difficulty of the block
    * @returns true if the block is valid, false otherwise
    */
-  isValid(previousIndex: number, previousHash: string, difficulty: number): Validation {
+  isValid(previousIndex: number, previousHash: string, difficulty: number, feePerTx: number): Validation {
     if (this.transactions.length) {
       const manyTxFee = this.transactions.filter(tx => tx.type === TransactionType.FEE);
-      const validations = this.transactions.map(tx => tx.isValid());
+
+      const totalFees = feePerTx * this.transactions.filter(tx => tx.type !== TransactionType.FEE).length;
+      const validations = this.transactions.map(tx => tx.isValid(difficulty, totalFees));
       const errors = validations.filter(validation => !validation.success).map(validation => validation.message);
 
       if (!manyTxFee.length) return Validation.failure('No fee tx.');

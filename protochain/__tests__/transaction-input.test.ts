@@ -12,7 +12,7 @@ describe('Transaction Input tests', () => {
 
   it('should be valid', () => {
     const txInput = new TransactionInput({
-      amount: 10,
+      amount: BigInt(10),
       fromAddress: alice.publicKey,
       previousTx: 'abc'
     } as TransactionInput);
@@ -26,13 +26,13 @@ describe('Transaction Input tests', () => {
     const txInput = new TransactionInput();
 
     expect(txInput.fromAddress).toBe('');
-    expect(txInput.amount).toBe('0');
+    expect(txInput.amount).toBe(0n);
     expect(txInput.signature).toBe('');
   });
 
   it('should be invalid without signature', () => {
     const txInput = new TransactionInput({
-      amount: 10,
+      amount: 10n,
       fromAddress: alice.publicKey,
     } as TransactionInput);
 
@@ -42,7 +42,7 @@ describe('Transaction Input tests', () => {
 
   it('should be invalid with zero amount', () => {
     const txInput = new TransactionInput({
-      amount: 0,
+      amount: 0n,
       fromAddress: alice.publicKey,
       previousTx: 'xyz'
     } as TransactionInput);
@@ -55,7 +55,7 @@ describe('Transaction Input tests', () => {
 
   it('should be invalid with negative amount', () => {
     const txInput = new TransactionInput({
-      amount: -10,
+      amount: -10n,
       fromAddress: alice.publicKey,
       previousTx: 'xyz'
     } as TransactionInput);
@@ -69,7 +69,7 @@ describe('Transaction Input tests', () => {
   it('should be invalid if signature does not match public key', () => {
     const bob = new Wallet();
     const txInput = new TransactionInput({
-      amount: 10,
+      amount: 10n,
       fromAddress: bob.publicKey,
       previousTx: 'xyz'
     } as TransactionInput);
@@ -82,14 +82,14 @@ describe('Transaction Input tests', () => {
 
   it('should be invalid if the amount is changed after signing', () => {
     const txInput3 = new TransactionInput({
-      amount: 10,
+      amount: 10n,
       fromAddress: alice.publicKey,
       previousTx: 'xyz'
     } as TransactionInput);
 
     txInput3.sign(alice.privateKey);
 
-    txInput3.amount = 20;
+    txInput3.amount = 20n;
 
     expect(txInput3.isValid().success).toBe(false);
     expect(txInput3.isValid().message).toBe('Invalid tx input signature.');
@@ -97,7 +97,7 @@ describe('Transaction Input tests', () => {
 
   it('should return invalid when the signature is incorrect', () => {
     const txInput = new TransactionInput({
-      amount: 10,
+      amount: 10n,
       fromAddress: alice.publicKey,
       previousTx: 'xyz'
     } as TransactionInput);
@@ -118,7 +118,7 @@ describe('Transaction Input tests', () => {
 
   it('should not be valid (invalid previous tx)', () => {
     const txInput = new TransactionInput({
-      amount: 10,
+      amount: 10n,
       fromAddress: alice.publicKey,
     } as TransactionInput);
 

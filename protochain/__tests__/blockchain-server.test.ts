@@ -312,13 +312,13 @@ describe('blochain-server tests', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
-      balance: 10,
+      balance: '10',
       fee: 1,
       utxo: [
         expect.objectContaining({
           amount: 10,
           toAddress: 'abc123',
-          tx: 'dummy-tx-hash',
+          tx: 'abc',
         }),
       ],
     });

@@ -4,6 +4,7 @@ import TransactionType from "./model/transaction.model.ts";
 import Validation from './validation.ts';
 import TransactionInput from './transaction-input.ts';
 import TransactionOutput from './transaction-output.ts';
+import Blockchain from './blockchain.ts';
 
 /**
  * Transaction class represents a transaction in the blockchain.
@@ -33,7 +34,23 @@ class Transaction {
       .digest('hex');
   }
 
-  isValid(): Validation {
+  getFee(): bigint { 
+    let inputSum = 0n, outputSum = 0n;
+
+    if (this.txInputs?.length) {
+      inputSum = this.txInputs.reduce((sum, txi) => sum + txi.amount, 0n);
+
+      if (this.txOutputs.length) {
+        outputSum = this.txOutputs.reduce((sum, txo) => sum + txo.amount, 0n);
+      }
+
+      return inputSum - outputSum;
+    }
+
+    return 0n;
+  }
+
+  isValid(difficulty: number, totalFees: number): Validation {
     let validation = this.validateHash();
     if (!validation.success) {
       return validation;
@@ -44,7 +61,7 @@ class Transaction {
       return validation;
     }
 
-    validation = this.validateInputs();
+    validation = this.validateInputs(difficulty, totalFees);
     if (!validation.success) {
       return validation;
     }
@@ -92,25 +109,47 @@ class Transaction {
    * Validates the transaction's inputs.
    * @returns {Validation} Validation result indicating if the inputs are valid.
    */
-  private validateInputs(): Validation {
+  private validateInputs(difficulty: number, totalFees: number): Validation {
+    if (this.type === TransactionType.FEE) {
+      const txo = this.txOutputs[0];
+
+      if (txo.amount > Blockchain.getRewardAmount(difficulty) + BigInt(totalFees)) {
+        return Validation.failure(`Invalid tx reward`);
+      }
+
+      return Validation.success();
+    }
+
     if (!this.txInputs?.length) {
       return Validation.failure('NO TXI.');
     }
 
-    const invalids = this.txInputs.map(txi => txi.isValid()).filter(v => !v.success);
+    const invalids = this.txInputs!.map(txi => txi.isValid()).filter(v => !v.success);
 
     if (invalids.length) {
       const messages = invalids.map(v => v.message).join(' ');
       return Validation.failure(`Invalid tx: ${messages}`);
     }
-    const inputSum = this.txInputs.map(txi => BigInt(txi.amount)).reduce((a, b) => a + b, BigInt(0));
-    const outputSum = this.txOutputs.map(txo => BigInt(txo.amount)).reduce((a, b) => a + b, BigInt(0));
+    const inputSum = this.txInputs.map(txi => txi.amount).reduce((a, b) => a + b, 0n);
+    const outputSum = this.txOutputs.map(txo => txo.amount).reduce((a, b) => a + b, 0n);
 
     if (inputSum < outputSum) {
       return Validation.failure('Invalid tx: input amounts must be equal or greater than output amounts.');
     }
 
     return Validation.success();
+  }
+
+  static fromReward(txo: TransactionOutput): Transaction {
+    const tx = new Transaction({
+      type: TransactionType.FEE,
+      txOutputs: [txo]
+    } as Transaction);
+
+    tx.hash = tx.getHash();
+    tx.txOutputs[0].tx = tx.hash;
+
+    return tx;
   }
 }
 

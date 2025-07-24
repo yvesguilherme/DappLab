@@ -40,8 +40,8 @@ class Block {
    * @param previousHash the hash of the previous block
    * @returns Validation object indicating success or failure
    */
-  isValid(previousIndex: number, previousHash: string): Validation {
-    if (previousIndex < 0 || this.index < 0 || !previousHash) {
+  isValid(previousIndex: number, previousHash: string, feePerTx: number): Validation {
+    if (previousIndex < 0 || this.index < 0 || !previousHash || feePerTx < 1) {
       return Validation.failure('Invalid mock block.');
     }
 

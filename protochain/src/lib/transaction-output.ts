@@ -1,5 +1,4 @@
 import { createHash } from 'crypto';
-import { BigNumberish } from 'ethers';
 
 import Validation from "./validation.ts";
 
@@ -8,17 +7,17 @@ import Validation from "./validation.ts";
  */
 class TransactionOutput {
   toAddress: string;
-  amount: BigNumberish;
+  amount: bigint;
   tx?: string;
 
   constructor(txOutput?: TransactionOutput) {
     this.toAddress = txOutput?.toAddress ?? '';
-    this.amount = txOutput?.amount ?? '0';
+    this.amount = BigInt(txOutput?.amount ?? 0);
     this.tx = txOutput?.tx ?? '';
   }
 
   isValid(): Validation {
-    if (BigInt(this.amount) < 1n) return Validation.failure('Negative amount.');
+    if (this.amount < 1n) return Validation.failure('Negative amount.');
 
     return Validation.success();
   }
