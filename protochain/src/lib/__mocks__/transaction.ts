@@ -27,7 +27,7 @@ class Transaction {
   }
 
   isValid(difficulty: number, totalFees: number): Validation {
-    if (this.timestamp < 1 || !this.hash || !difficulty || !totalFees) return Validation.failure('Invalid mock transaction.');
+    if (this.timestamp < 1 || !this.hash || difficulty < 1 || totalFees < 1) return Validation.failure('Invalid mock transaction.');
 
     return Validation.success();
   }

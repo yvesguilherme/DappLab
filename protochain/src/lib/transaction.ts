@@ -114,7 +114,7 @@ class Transaction {
       const txo = this.txOutputs[0];
 
       if (txo.amount > Blockchain.getRewardAmount(difficulty) + BigInt(totalFees)) {
-        return Validation.failure(`Invalid tx reward`);
+        return Validation.failure(`Invalid tx reward.`);
       }
 
       return Validation.success();

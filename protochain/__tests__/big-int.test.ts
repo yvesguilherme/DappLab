@@ -67,4 +67,24 @@ describe('convertBigIntFields', () => {
     expect(convertBigIntFields(true)).toBe(true);
     expect(convertBigIntFields(null)).toBe(null);
   });
+
+  it('parseBigInt: catch block is triggered for invalid string (simulate exception)', () => {
+    // Simulate exception in BigInt by passing a string that will throw
+    // BigInt('not-a-number') throws, so we can spy on BigInt and force it to throw
+    const originalBigInt = global.BigInt;
+    // @ts-ignore
+    global.BigInt = () => { throw new Error('forced error'); };
+    expect(parseBigInt('123')).toBe(0n);
+    // @ts-ignore
+    global.BigInt = originalBigInt;
+  });
+
+  it('parseBigInt: catch block is triggered for number (simulate exception)', () => {
+    const originalBigInt = global.BigInt;
+    // @ts-ignore
+    global.BigInt = () => { throw new Error('forced error'); };
+    expect(parseBigInt(42)).toBe(0n);
+    // @ts-ignore
+    global.BigInt = originalBigInt;
+  });
 });

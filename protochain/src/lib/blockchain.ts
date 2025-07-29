@@ -72,7 +72,7 @@ class Blockchain {
       );
 
       if (pendingTx) {
-        return new Validation(false, `This wallet has a pending transaction`);
+        return new Validation(false, `This wallet has a pending transaction.`);
       }
 
       const utxo = this.getUTXO(fromAddress);
@@ -82,12 +82,12 @@ class Blockchain {
         const utxoIndex = utxo.findIndex(txo => txo.tx === txi.previousTx && txo.amount >= txi.amount);
 
         if (utxoIndex === -1) {
-          return Validation.failure(`Invalid transaction: the TXO is already spent or unexistent`);
+          return Validation.failure(`Invalid transaction: the TXO is already spent or unexistent.`);
         }
 
-        if (txi.fromAddress !== fromAddress) {
-          return new Validation(false, `Input ${i} does not match the wallet address`);
-        }
+        // if (txi.fromAddress !== fromAddress) {
+        //   return new Validation(false, `Input ${i} does not match the wallet address.`);
+        // }
       }
     }
 

@@ -2,9 +2,11 @@ import { describe, it, expect, beforeAll } from '@jest/globals';
 
 import TransactionInput from '../src/lib/transaction-input';
 import Wallet from '../src/lib/wallet';
+import TransactionOutput from '../src/lib/transaction-output';
 
 describe('Transaction Input tests', () => {
   let alice: Wallet;
+  const exampleTx = '032e9ea4b9abb3714a1498790f8880cb29f13542c3670fc639c94e1717a19efcab';
 
   beforeAll(() => {
     alice = new Wallet();
@@ -126,5 +128,20 @@ describe('Transaction Input tests', () => {
 
     expect(txInput.isValid().success).toBe(false);
     expect(txInput.isValid().message).toBe('Signature and previous tx are required.');
+  });
+
+  it('should create from TXO', () => {
+    const txi = TransactionInput.fromTxo({
+      amount: BigInt(10),
+      toAddress: alice.publicKey,
+      tx: exampleTx
+    } as TransactionOutput);
+
+    txi.sign(alice.privateKey);
+
+    txi.amount = BigInt(20);
+
+    expect(txi.isValid().success).toBe(false);
+    expect(txi.isValid().message).toBe('Invalid tx input signature.');
   });
 });

@@ -5,6 +5,7 @@ import { app } from '../src/server/blockchain-server.ts';
 import Transaction from '../src/lib/transaction.ts';
 import TransactionInput from '../src/lib/transaction-input.ts';
 import TransactionOutput from '../src/lib/transaction-output.ts';
+import { serializeBigInt } from '../src/util/big-int.ts';
 
 jest.mock('../src/lib/block');
 jest.mock('../src/lib/blockchain');
@@ -96,24 +97,49 @@ describe('blochain-server tests', () => {
   test('POST /api/block - should return 201 when the block is added', async () => {
     const tx = new Transaction({ txInputs: [new TransactionInput()] } as Transaction);
 
-    const newBlock = {
+    const block = {
       index: 1,
       previousHash: '00cdef1234567890',
       transactions: [tx]
     };
+
+    const newBlock = serializeBigInt(block);
 
     const response = await request(app)
       .post('/api/block')
       .send(newBlock);
 
     expect(response.status).toEqual(201);
-    expect(response.body).toEqual({
-      ...newBlock,
+    expect(response.body).toEqual(expect.objectContaining({
       hash: expect.any(String),
       nonce: expect.any(Number),
       miner: 'abc',
       timestamp: expect.any(Number),
-    });
+      index: 1,
+      previousHash: '00cdef1234567890',
+      transactions: [
+        expect.objectContaining({
+          hash: expect.any(String),
+          timestamp: expect.any(Number),
+          txInputs: [
+            expect.objectContaining({
+              amount: "10",
+              fromAddress: "wallet1",
+              previousTx: "xyz",
+              signature: "abc",
+            }),
+          ],
+          txOutputs: [
+            expect.objectContaining({
+              amount: "10",
+              toAddress: "abc",
+              tx: "xyz",
+            }),
+          ],
+          type: 1,
+        }),
+      ],
+    }));
   });
 
   test('POST /api/block - should return 422 when previousHash is invalid', async () => {
@@ -128,7 +154,7 @@ describe('blochain-server tests', () => {
 
     const response = await request(app)
       .post('/api/block')
-      .send(newBlock);
+      .send(serializeBigInt(newBlock));
 
     expect(response.status).toEqual(422);
     expect(response.body).toEqual({ error: 'Unprocessable Content' });
@@ -154,7 +180,7 @@ describe('blochain-server tests', () => {
 
     const response = await request(app)
       .post('/api/block')
-      .send(newBlock);
+      .send(serializeBigInt(newBlock));
 
     expect(response.status).toEqual(422);
     expect(response.body).toEqual({ error: 'Unprocessable Content' });
@@ -172,7 +198,7 @@ describe('blochain-server tests', () => {
 
     const response = await request(app)
       .post('/api/block')
-      .send(newBlock);
+      .send(serializeBigInt(newBlock));
 
     expect(response.status).toEqual(500);
     expect(response.body).toEqual({ success: false, message: 'Invalid mock block.' });
@@ -277,7 +303,7 @@ describe('blochain-server tests', () => {
 
     const response = await request(app)
       .post('/api/transactions')
-      .send(tx);
+      .send(serializeBigInt(tx));
 
     expect(response.status).toEqual(201);
   });
@@ -294,12 +320,15 @@ describe('blochain-server tests', () => {
   });
 
   test('POST /api/transactions - should return http 400', async () => {
-    const tx = new Transaction({ txInputs: [new TransactionInput()], txOutputs: [new TransactionOutput()] } as Transaction);
+    const tx = new Transaction({
+      txInputs: [new TransactionInput()],
+      txOutputs: [new TransactionOutput()]
+    } as Transaction);
     tx.timestamp = -1;
-    
+
     const response = await request(app)
       .post('/api/transactions')
-      .send(tx);
+      .send(serializeBigInt(tx));
 
     expect(response.status).toEqual(400);
     expect(response.body).toEqual({ message: 'Invalid mock transaction.', success: false });
@@ -316,7 +345,7 @@ describe('blochain-server tests', () => {
       fee: 1,
       utxo: [
         expect.objectContaining({
-          amount: 10,
+          amount: '10',
           toAddress: 'abc123',
           tx: 'abc',
         }),

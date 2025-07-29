@@ -103,7 +103,7 @@ apiRouter.post('/transactions', (req: Request, res: Response): any => {
       .json({ error: 'Unprocessable Entity' });
   }
 
-  const txData = convertBigIntFields(req.body);
+  const txData = convertBigIntFields(req.body as Transaction);
   const tx = new Transaction(txData);
   // const tx = new Transaction(req.body as Transaction);
 
