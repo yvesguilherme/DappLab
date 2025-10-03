@@ -4,7 +4,7 @@
   "main": "crypto.js",
   "type": "module",
   "engines": {
-    "node": "v22.15.0"
+    "node": ">=v22.15.0"
   },
   "scripts": {
     "start": "node --env-file=.env index.js",

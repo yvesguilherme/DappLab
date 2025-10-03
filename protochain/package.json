@@ -12,7 +12,7 @@
     "test": "rm -rf coverage; jest --no-cache"
   },
   "engines": {
-    "node": "v22.16.0"
+    "node": ">=v22.16.0"
   },
   "type": "module",
   "keywords": [],
